@@ -26,9 +26,12 @@ DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
 
 crypt = cryptacular.bcrypt.BCRYPTPasswordManager()
+SALT = "88"
+def salt_pwrd(pwrd,salt=SALT):
+    return ':'.join((pwrd, salt))
 
-def hash_password(password):
-    return unicode(crypt.encode(,password))
+def hash_pwrd(pwrd):
+    return unicode(crypt.encode(salt_pwrd(pwrd)))
 
 class User(Base):
     """
@@ -44,33 +47,33 @@ class User(Base):
     delivered_hits = Column(Integer, default=0)
     delivered_misses = Column(Integer, default=0)
 
-    _password = Column('password', Unicode(60))
+    _pwrd = Column('pwrd', Unicode(60))
 
-    def _get_password(self):
-        return self._password
+    def _get_pwrd(self):
+        return self._pwrd
 
-    def _set_password(self, password):
-        self._password = hash_password(password)
+    def _set_pwrd(self, pwrd):
+        self._pwrd = hash_pwrd(pwrd)
 
-    password = property(_get_password, _set_password)
-    password = synonym('_password', descriptor=password)
+    pwrd = property(_get_pwrd, _set_pwrd)
+    pwrd = synonym('_pwrd', descriptor=pwrd)
 
-    def __init__(self, username, password, name, email):
+    def __init__(self, username, pwrd, name, email):
         self.username = username
         self.name = name
         self.email = email
-        self.password = password
+        self.pwrd = pwrd
 
     @classmethod
     def get_by_username(cls, username):
         return DBSession.query(cls).filter(cls.username==username).first()
 
     @classmethod
-    def check_password(cls, username, password):
+    def check_pwrd(cls, username, pwrd):
         user = cls.get_by_username(username)
         if not user:
             return False
-        return crypt.check(user.password, password)
+        return crypt.check(user.pwrd,salt_pwrd(pwrd))
 
 
 ideas_tags = Table('ideas_tags', Base.metadata,

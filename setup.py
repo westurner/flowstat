@@ -24,9 +24,9 @@ requires = [
 if sys.version_info[:3] < (2,5,0):
     requires.append('pysqlite')
 
-setup(name='shootout',
-      version='0.2',
-      description='A generic idea discussion and rating app (Pyramid sample)',
+setup(name='flow',
+      version='0.1',
+      description='',
       long_description=README + '\n\n' +  CHANGES,
       classifiers=[
         "Framework :: Pylons",
@@ -38,19 +38,15 @@ setup(name='shootout',
         "Topic :: Internet :: WWW/HTTP :: WSGI",
         "Topic :: Internet :: WWW/HTTP :: WSGI :: Application",
         ],
-      author="Carlos de la Guardia, Lukasz Fidosz",
-      author_email="cguardia@yahoo.com, virhilo@gmail.com",
-      url='http://pylons-devel@googlegroups.com',
       license="BSD-derived (http://www.repoze.org/LICENSE.txt)",
-      keywords='web wsgi pyramid pylons example',
       packages=find_packages(),
       include_package_data=True,
       zip_safe=False,
-      test_suite='shootout.tests',
+      test_suite='flow.tests',
       install_requires = requires,
       entry_points = """\
       [paste.app_factory]
-      main = shootout:main
+      main = flow:main
       """,
       paster_plugins=['pyramid'],
       )

@@ -1,23 +1,17 @@
-shootout
+flow
 ========
 
-shootout is a demo app for the Pyramid web framework.  The concepts
-demonstrated in the code include:
-
-- Urldispatch mechanism (similar to routes).
-
-- Built-in authentication and authorization mechanism.
-
-- Integration with pyramid_simpleform for form handling.
-
-- SQLAlchemy based models.
 
 Library Requirements
 --------------------
 
-shootout requires a SQLite3 bindings.
+flow requires SQLite3 bindings.
 
-On a Debian system, these imply: build-essentials, libsqlite3-dev.
+Debian::
+
+    sudo apt-get install build-essentials
+    sudo apt-get install libsqlite3-dev
+
 
 Installing and Running
 ----------------------
@@ -28,11 +22,11 @@ Installing and Running
 
 #. . bin/activate
 
-#. git clone git@github.com:Pylons/shootout.git
+#. ____ clone ________
 
-#. cd shootout
+#. cd flow
 
 #. python setup.py develop
 
-#. paster serve development.ini
+#. paster serve --reload development.ini
 

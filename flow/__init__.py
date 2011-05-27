@@ -5,7 +5,7 @@ from pyramid.session import UnencryptedCookieSessionFactoryConfig
 
 from sqlalchemy import engine_from_config
 
-from shootout.models import initialize_sql
+from flow.models import initialize_sql
 
 
 def main(global_config, **settings):
@@ -20,11 +20,11 @@ def main(global_config, **settings):
     authz_policy = ACLAuthorizationPolicy()
 
     settings = dict(settings)
-    settings.setdefault('jinja2.i18n.domain', 'shootout')
+    settings.setdefault('jinja2.i18n.domain', 'flow')
 
     config = Configurator(
         settings=settings,
-        root_factory='shootout.models.RootFactory',
+        root_factory='flow.models.RootFactory',
         authentication_policy=authn_policy,
         authorization_policy=authz_policy,
         session_factory=session_factory
@@ -32,12 +32,12 @@ def main(global_config, **settings):
     config.add_translation_dirs('locale/')
     config.include('pyramid_jinja2')
 
-    config.add_subscriber('shootout.subscribers.add_base_template',
+    config.add_subscriber('flow.subscribers.add_base_template',
                           'pyramid.events.BeforeRender')
-    config.add_subscriber('shootout.subscribers.csrf_validation',
+    config.add_subscriber('flow.subscribers.csrf_validation',
                           'pyramid.events.NewRequest')
 
-    config.add_static_view('static', 'shootout:static')
+    config.add_static_view('static', 'flow:static')
 
     config.add_route('idea', '/ideas/{idea_id}')
     config.add_route('user', '/users/{username}')
