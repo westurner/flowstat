@@ -1,4 +1,7 @@
-Next release
+Flow 0.1
 ============
 
 - Forked from repoze.shootout 0.6dev
+  Many many thanks to Carlos de la Guardia and Lukasz Fidosz
+  for https://github.com/Pylons/shootout
+

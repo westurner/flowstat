@@ -4,19 +4,19 @@
       xmlns:metal="http://xml.zope.org/namespaces/metal">
     <head>
         <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-        <link href="${request.static_url('shootout:static/default.css')}" rel="stylesheet" type="text/css" />
-        <title>Shootout</title>
+        <link href="${request.static_url('flow:static/default.css')}" rel="stylesheet" type="text/css" />
+        <title>Flow</title>
     </head>
     <body>
         <div id="wrapper">
             <div id="header">
-                <h1>Shootout</h1>
-                <h2>Pyramid web framework demo app</h2>
+                <h1>Flow</h1>
+                <h2>A work in progress</h2>
             </div>
             <div id="menu">
                 <ul>
                     <li><a href="${request.route_url('main')}">Home</a></li>
-                    <li><a href="${request.route_url('about')}">About this demo</a></li>
+                    <li><a href="${request.route_url('about')}">About</a></li>
                 </ul>
             </div>
             <div id="content">
@@ -41,9 +41,7 @@
             </div>
             <div id="footer">
                 <p>
-                    Copyright &copy; 2010 <a href="http://www.delaguardia.com.mx">Carlos de la Guardia</a> and Łukasz Fidosz.
-                    Powered by <a href="http://docs.pylonshq.com">Pyramid</a>.
-                    Design by <a href="http://www.sumanasa.com/">Sumanasa.com</a>.
+                    Copyright &copy; 2011 
                 </p>
             </div>
         </div>

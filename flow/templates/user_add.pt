@@ -12,13 +12,13 @@
             ${form.label('username', 'Username:')}
             ${form.text('username')}
             <br />
-            ${form.errorlist('password')}
-            ${form.label('password', 'Password:')}
-            ${form.password('password')}
+            ${form.errorlist('pwrd')}
+            ${form.label('pwrd', 'Password:')}
+            ${form.password('pwrd')}
             <br />
-            ${form.errorlist('confirm_password')}
-            ${form.label('confirm_password', 'Confirm password:')}
-            ${form.password('confirm_password')}
+            ${form.errorlist('confirm_pwrd')}
+            ${form.label('confirm_pwrd', 'Confirm password:')}
+            ${form.password('confirm_pwrd')}
             <br />
             ${form.errorlist('name')}
             ${form.label('name', 'Full name:')}

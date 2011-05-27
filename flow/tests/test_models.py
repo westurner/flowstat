@@ -5,8 +5,8 @@ from pyramid import testing
 
 
 def _initTestingDB():
-    from shootout.models import DBSession
-    from shootout.models import Base
+    from flow.models import DBSession
+    from flow.models import Base
     from sqlalchemy import create_engine
     engine = create_engine('sqlite://')
     session = DBSession()
@@ -26,15 +26,15 @@ class ModelsTestCase(unittest.TestCase):
         testing.tearDown()
 
     def _addUser(self, username=u'username'):
-        from shootout.models import User
-        user = User(username=username, password=u'password', name=u'name',
+        from flow.models import User
+        user = User(username=username, pwrd=u'pwrd', name=u'name',
                     email=u'email')
         self.session.add(user)
         self.session.flush()
         return user
 
     def _addIdea(self, target=None, user=None, title=u'title'):
-        from shootout.models import Idea
+        from flow.models import Idea
         if not user:
             user = self._addUser()
         idea = Idea(target=target, author=user, title=title,
@@ -46,8 +46,8 @@ class ModelsTestCase(unittest.TestCase):
 
 class TestUser(ModelsTestCase):
     def test_add_user(self):
-        from shootout.models import User
-        user = User(u'username', u'password', u'name', u'email')
+        from flow.models import User
+        user = User(u'username', u'pwrd', u'name', u'email')
         self.session.add(user)
         self.session.flush()
         user = self.session.query(User).filter(User.username == u'username')
@@ -61,39 +61,40 @@ class TestUser(ModelsTestCase):
         self.assertEqual(user.delivered_misses, 0)
 
     def test_doesnt_exitst(self):
-        from shootout.models import User
+        from flow.models import User
         from sqlalchemy.orm.exc import NoResultFound
         query = self.session.query(User).filter(User.username == u'nobody')
         self.assertRaises(NoResultFound, query.one)
 
     def test_arleady_exist(self):
-        from shootout.models import User
+        from flow.models import User
         from sqlalchemy.exc import IntegrityError
         self._addUser()
         self.assertRaises(IntegrityError, self._addUser)
 
-    def test_password_hashing(self):
+    def test_pwrd_hashing(self):
         import cryptacular.bcrypt
+        from flow.models import salt_pwrd
         crypt = cryptacular.bcrypt.BCRYPTPasswordManager()
         user = self._addUser()
-        self.assertTrue(crypt.check(user.password, u'password'))
+        self.assertTrue(crypt.check(user.pwrd, salt_pwrd(u'pwrd')))
 
-    def test_password_checking(self):
-        from shootout.models import User
+    def test_pwrd_checking(self):
+        from flow.models import User
         user = self._addUser()
-        self.assertTrue(User.check_password(u'username', u'password'))
-        self.assertFalse(User.check_password(u'username', u'wrong'))
-        self.assertFalse(User.check_password(u'nobody', u'password'))
+        self.assertTrue(User.check_pwrd(u'username', u'pwrd'))
+        self.assertFalse(User.check_pwrd(u'username', u'wrong'))
+        self.assertFalse(User.check_pwrd(u'nobody', u'pwrd'))
 
     def test_getting_by_username(self):
-        from shootout.models import User
+        from flow.models import User
         user = self._addUser()
         self.assertEqual(user, User.get_by_username(u'username'))
        
 
 class TestTag(ModelsTestCase):
     def test_extracting_tags(self):
-        from shootout.models import Tag
+        from flow.models import Tag
         tags_string = u'foo, bar; baz xxx,, yyy, zzz'
         expected_tags = set([
             u'foo', u'bar', u'baz', u'xxx', u'yyy', u'zzz'
@@ -102,7 +103,7 @@ class TestTag(ModelsTestCase):
         self.assertEqual(extracted_tags, expected_tags)
 
     def test_creating_tags(self):
-        from shootout.models import Tag
+        from flow.models import Tag
         tags = Tag.create_tags(u'foo bar baz')
         tags_names = set([u'foo', u'bar', u'baz'])
         self.assertEqual(tags[0].name, tags_names.pop())
@@ -110,7 +111,7 @@ class TestTag(ModelsTestCase):
         self.assertEqual(tags[2].name, tags_names.pop())
 
     def test_tags_counts(self):
-        from shootout.models import Tag, Idea
+        from flow.models import Tag, Idea
 
         user = self._addUser()
 
@@ -139,12 +140,12 @@ class TestTag(ModelsTestCase):
 class TestIdea(ModelsTestCase):
 
     def _getIdea(self, idea_id):
-        from shootout.models import Idea
+        from flow.models import Idea
         query = self.session.query(Idea).filter(Idea.idea_id == idea_id)
         return query.first()
 
     def test_add_idea(self):
-        from shootout.models import Idea
+        from flow.models import Idea
         user = self._addUser()
         idea = Idea(
             author=user,
@@ -170,7 +171,7 @@ class TestIdea(ModelsTestCase):
         self.assertEqual(idea.vote_differential, 0)
 
     def test_doesnt_exist(self):
-        from shootout.models import Idea
+        from flow.models import Idea
         from sqlalchemy.orm.exc import NoResultFound
         query = self.session.query(Idea).filter(Idea.title == u'Bar')
         self.assertRaises(NoResultFound, query.one)
@@ -213,13 +214,13 @@ class TestIdea(ModelsTestCase):
         self.assertEqual(idea.vote_differential, -5)
 
     def test_get_by_id(self):
-        from shootout.models import Idea
+        from flow.models import Idea
         idea = self._addIdea()
         queried_idea = Idea.get_by_id(idea.idea_id)
         self.assertEqual(idea, queried_idea)
 
     def test_ideas_bunch(self):
-        from shootout.models import Idea
+        from flow.models import Idea
         user = self._addUser()
         idea1 = self._addIdea(user=user)
         idea2 = self._addIdea(user=user, title=u'title3')
@@ -233,7 +234,7 @@ class TestIdea(ModelsTestCase):
                          [idea1, idea4, idea2, idea3])
 
     def test_user_voted(self):
-        from shootout.models import Idea
+        from flow.models import Idea
         idea = self._addIdea()
         voting_user = self._addUser(u'voter')
         idea.voted_users.append(voting_user)

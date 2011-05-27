@@ -16,10 +16,10 @@ from pyramid.security import authenticated_userid, remember, forget
 
 from pyramid.i18n import TranslationStringFactory
 
-_ = TranslationStringFactory('shootout')
+_ = TranslationStringFactory('flow')
 
-from shootout.models import DBSession
-from shootout.models import User, Idea, Tag
+from flow.models import DBSession
+from flow.models import User, Idea, Tag
 
 
 try:
@@ -117,13 +117,13 @@ def idea_vote(request):
 class RegistrationSchema(formencode.Schema):
     allow_extra_fields = True
     username = formencode.validators.PlainText(not_empty=True)
-    password = formencode.validators.PlainText(not_empty=True)
+    pwrd = formencode.validators.PlainText(not_empty=True)
     email = formencode.validators.Email(resolve_domain=False)
     name = formencode.validators.String(not_empty=True)
-    password = formencode.validators.String(not_empty=True)
-    confirm_password = formencode.validators.String(not_empty=True)
+    pwrd = formencode.validators.String(not_empty=True)
+    confirm_pwrd = formencode.validators.String(not_empty=True)
     chained_validators = [
-        formencode.validators.FieldsMatch('password','confirm_password')
+        formencode.validators.FieldsMatch('pwrd','confirm_pwrd')
     ]
 
 
@@ -138,7 +138,7 @@ def user_add(request):
         username=form.data['username']
         user = User(
             username=username,
-            password=form.data['password'],
+            pwrd=form.data['pwrd'],
             name=form.data['name'],
             email=form.data['email']
         )
@@ -286,9 +286,9 @@ def login_view(request):
     post_data = request.POST
     if 'submit' in post_data:
         login = post_data['login']
-        password = post_data['password']
+        pwrd = post_data['pwrd']
 
-        if User.check_password(login, password):
+        if User.check_pwrd(login, pwrd):
             headers = remember(request, login)
             request.session.flash(u'Logged in successfully.')
             return HTTPFound(location=came_from, headers=headers)

@@ -4,8 +4,8 @@ from pyramid import testing
 
 
 def _initTestingDB():
-    from shootout.models import DBSession
-    from shootout.models import Base
+    from flow.models import DBSession
+    from flow.models import Base
     from sqlalchemy import create_engine
     engine = create_engine('sqlite://')
     session = DBSession()
@@ -47,15 +47,15 @@ class ViewTests(unittest.TestCase):
         testing.tearDown()
 
     def _addUser(self, username=u'username'):
-        from shootout.models import User
-        user = User(username=username, password=u'password', name=u'name',
+        from flow.models import User
+        user = User(username=username, pwrd=u'pwrd', name=u'name',
                     email=u'email')
         self.session.add(user)
         self.session.flush()
         return user
 
     def _addIdea(self, target=None, user=None):
-        from shootout.models import Idea
+        from flow.models import Idea
         if not user:
             user = self._addUser()
         idea = Idea(target=target, author=user, title=u'title',
@@ -65,7 +65,7 @@ class ViewTests(unittest.TestCase):
         return idea
         
     def test_main_view(self):
-        from shootout.views import main_view
+        from flow.views import main_view
         self.config.testing_securitypolicy(u'username')
         _registerCommonTemplates(self.config)
         request = testing.DummyRequest()
@@ -74,7 +74,7 @@ class ViewTests(unittest.TestCase):
         self.assertEqual(len(result['toplists']), 4)
 
     def test_idea_add_nosubmit_idea(self):
-        from shootout.views import idea_add
+        from flow.views import idea_add
         self.config.testing_securitypolicy(u'username')
         _registerCommonTemplates(self.config)
         request = testing.DummyRequest()
@@ -83,7 +83,7 @@ class ViewTests(unittest.TestCase):
         self.assertEqual(result['kind'], 'idea')
         
     def test_idea_add_nosubmit_comment(self):
-        from shootout.views import idea_add
+        from flow.views import idea_add
         self.config.testing_securitypolicy(u'username')
         _registerCommonTemplates(self.config)
         idea = self._addIdea()
@@ -93,7 +93,7 @@ class ViewTests(unittest.TestCase):
         self.assertEqual(result['kind'], 'comment')
 
     def test_idea_add_not_existing_target(self):
-        from shootout.views import idea_add
+        from flow.views import idea_add
         self.config.testing_securitypolicy(u'username')
         _registerCommonTemplates(self.config)
         request = testing.DummyRequest(params={'target': 100})
@@ -102,7 +102,7 @@ class ViewTests(unittest.TestCase):
 
 
     def test_idea_add_submit_schema_fail_empty_params(self):
-        from shootout.views import idea_add
+        from flow.views import idea_add
         self.config.testing_securitypolicy(u'username')
         _registerCommonTemplates(self.config)
         _registerRoutes(self.config)
@@ -118,8 +118,8 @@ class ViewTests(unittest.TestCase):
         )
 
     def test_idea_add_submit_schema_succeed(self):
-        from shootout.views import idea_add
-        from shootout.models import Idea
+        from flow.views import idea_add
+        from flow.models import Idea
         self.config.testing_securitypolicy(u'username')
         _registerRoutes(self.config)
         request = testing.DummyRequest(
@@ -146,8 +146,8 @@ class ViewTests(unittest.TestCase):
         self.assertEqual(idea.tags[2].name, u'def')
 
     def test_positive_idea_voting(self):
-        from shootout.views import idea_vote
-        from shootout.models import User
+        from flow.views import idea_vote
+        from flow.models import User
         _registerRoutes(self.config)        
         idea = self._addIdea()
         user = self.session.query(User).one()
@@ -170,8 +170,8 @@ class ViewTests(unittest.TestCase):
         self.assertTrue(idea.user_voted(u'username'))
 
     def test_negative_idea_voting(self):
-        from shootout.views import idea_vote
-        from shootout.models import User
+        from flow.views import idea_vote
+        from flow.models import User
         _registerRoutes(self.config)        
         idea = self._addIdea()
         user = self.session.query(User).one()
@@ -194,14 +194,14 @@ class ViewTests(unittest.TestCase):
         self.assertTrue(idea.user_voted(u'username'))
 
     def test_registration_nosubmit(self):
-        from shootout.views import user_add
+        from flow.views import user_add
         _registerCommonTemplates(self.config)
         request = testing.DummyRequest()
         result = user_add(request)
         self.assertTrue('form' in result)
 
     def test_registration_submit_empty(self):
-        from shootout.views import user_add
+        from flow.views import user_add
         _registerCommonTemplates(self.config)
         request = testing.DummyRequest()
         result = user_add(request)
@@ -212,23 +212,23 @@ class ViewTests(unittest.TestCase):
             result['form'].form.errors,
             {
                 'username': u'Missing value',
-                'confirm_password': u'Missing value',
-                'password': u'Missing value',
+                'confirm_pwrd': u'Missing value',
+                'pwrd': u'Missing value',
                 'email': u'Missing value',
                 'name': u'Missing value'
             }
         )
 
     def test_registration_submit_schema_succeed(self):
-        from shootout.views import user_add
-        from shootout.models import User
+        from flow.views import user_add
+        from flow.models import User
         _registerRoutes(self.config)        
         request = testing.DummyRequest(
             post={
                 'form.submitted': u'Register',
                 'username': u'username',
-                'password': u'secret',
-                'confirm_password': u'secret',
+                'pwrd': u'secret',
+                'confirm_pwrd': u'secret',
                 'email': u'username@example.com',
                 'name': u'John Doe',
             }
@@ -248,7 +248,7 @@ class ViewTests(unittest.TestCase):
         self.assertEqual(user.voted_ideas, [])
 
     def test_user_view(self):
-        from shootout.views import user_view
+        from flow.views import user_view
         self.config.testing_securitypolicy(u'username')
         _registerRoutes(self.config)
         _registerCommonTemplates(self.config)
@@ -260,7 +260,7 @@ class ViewTests(unittest.TestCase):
         self.assertEqual(result['user'].user_id, 1)
 
     def test_idea_view(self):
-        from shootout.views import idea_view
+        from flow.views import idea_view
         self.config.testing_securitypolicy(u'username')
         _registerRoutes(self.config)
         _registerCommonTemplates(self.config)
@@ -273,8 +273,8 @@ class ViewTests(unittest.TestCase):
         self.assertEqual(result['viewer_username'], u'username')
 
     def test_tag_view(self):
-        from shootout.views import tag_view
-        from shootout.models import Tag
+        from flow.views import tag_view
+        from flow.models import Tag
         self.config.testing_securitypolicy(u'username')
         _registerRoutes(self.config)
         _registerCommonTemplates(self.config)
@@ -305,20 +305,20 @@ class ViewTests(unittest.TestCase):
         self.assertEqual(result['tag'], u'foo')
 
     def test_about_view(self):
-        from shootout.views import about_view
+        from flow.views import about_view
         _registerCommonTemplates(self.config)
         request = testing.DummyRequest()
         about_view(request)
 
     def test_login_view_submit_fail(self):
-        from shootout.views import login_view
+        from flow.views import login_view
         _registerRoutes(self.config)
         self._addUser()
         request = testing.DummyRequest(
             post={
                 'submit': u'Login',
                 'login': u'username',
-                'password': u'wrongpassword',
+                'pwrd': u'wrongpwrd',
             }
         )
         login_view(request)
@@ -327,14 +327,14 @@ class ViewTests(unittest.TestCase):
 
 
     def test_login_view_submit_success(self):
-        from shootout.views import login_view
+        from flow.views import login_view
         _registerRoutes(self.config)
         self._addUser()
         request = testing.DummyRequest(
             post={
                 'submit': u'Login',
                 'login': u'username',
-                'password': u'password',
+                'pwrd': u'pwrd',
             }
         )
         login_view(request)
@@ -342,7 +342,7 @@ class ViewTests(unittest.TestCase):
         self.assertEqual(messages, [u'Logged in successfully.'])
 
     def test_logout_view(self):
-        from shootout.views import logout_view
+        from flow.views import logout_view
         _registerRoutes(self.config)
         request = testing.DummyRequest()
         logout_view(request)
