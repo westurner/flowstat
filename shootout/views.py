@@ -14,10 +14,18 @@ from pyramid.httpexceptions import HTTPFound
 from pyramid.httpexceptions import HTTPNotFound
 from pyramid.security import authenticated_userid, remember, forget
 
+from pyramid.i18n import TranslationStringFactory
+
+_ = TranslationStringFactory('shootout')
 
 from shootout.models import DBSession
 from shootout.models import User, Idea, Tag
 
+
+try:
+    from cSimpleJson import json
+except ImportError:
+    import json
 
 @view_config(permission='view', route_name='main',
              renderer='templates/main.pt')
@@ -45,6 +53,36 @@ def main_view(request):
         'toplists': toplists,
     }
 
+class SPARQLQuerySchema(formencode.Schema):
+    allow_extra_fields = True
+    q = formencode.validators.String(not_empty=True) # ..
+
+@view_config(permission='view', route_name='sparql_query',
+            renderer='templates/sparql_query.jinja2')
+def sparql_query(request):
+
+    results_json = None
+
+    form = Form(request, schema=SPARQLQuerySchema)
+
+    if 'form.submitted' in request.POST and form.validate():
+
+        querystr = form.data['q'] 
+        
+        #graph, store
+
+        #query = graph.query(form.data['q'])
+        #results = query.serialize('python')
+        results = "{awesome}"
+        results_json = json.dumps(results)
+    else:
+        querystr = """SELECT ?s ?p ?o WHERE { ?s ?p ?o }"""
+
+    return {
+        'form': FormRenderer(form),
+        'query': querystr,
+        'results': results_json,
+    }
 
 @view_config(permission='post', route_name='idea_vote')
 def idea_vote(request):

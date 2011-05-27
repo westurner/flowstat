@@ -19,6 +19,9 @@ def main(global_config, **settings):
     authn_policy = AuthTktAuthenticationPolicy('s0secret')
     authz_policy = ACLAuthorizationPolicy()
 
+    settings = dict(settings)
+    settings.setdefault('jinja2.i18n.domain', 'shootout')
+
     config = Configurator(
         settings=settings,
         root_factory='shootout.models.RootFactory',
@@ -26,6 +29,8 @@ def main(global_config, **settings):
         authorization_policy=authz_policy,
         session_factory=session_factory
     )
+    config.add_translation_dirs('locale/')
+    config.include('pyramid_jinja2')
 
     config.add_subscriber('shootout.subscribers.add_base_template',
                           'pyramid.events.BeforeRender')
@@ -39,6 +44,9 @@ def main(global_config, **settings):
     config.add_route('tag', '/tags/{tag_name}')
     config.add_route('idea_add', '/idea_add')
     config.add_route('idea_vote', '/idea_vote')
+
+    config.add_route('sparql_query', '/sparql')
+
     config.add_route('register', '/register')
     config.add_route('login', '/login')
     config.add_route('logout', '/logout')
