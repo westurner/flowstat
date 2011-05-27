@@ -1,0 +1,19 @@
+<html>
+<head>
+<title>{{ title }}</title>
+</head>
+<body>
+
+{{ form.begin(request.route_url('sparql_query'), id="sparql_query") }}
+    {{ form.errorlist() }}
+    {{ form.label("q","SPARQL Query") }}
+    {{ form.textarea("q", content=query, cols=80, rows=10) }}
+    {{ form.submit("form.submitted","Go") }}
+    {{ form.csrf_token() }}
+{{ form.end() }}
+
+<div>
+    <pre> {{ results }} </pre>
+</div>
+</body>
+</html>

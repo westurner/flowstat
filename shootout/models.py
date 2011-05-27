@@ -28,7 +28,7 @@ Base = declarative_base()
 crypt = cryptacular.bcrypt.BCRYPTPasswordManager()
 
 def hash_password(password):
-    return unicode(crypt.encode(password))
+    return unicode(crypt.encode(,password))
 
 class User(Base):
     """
@@ -183,4 +183,7 @@ def initialize_sql(engine):
     DBSession.configure(bind=engine)
     Base.metadata.bind = engine
     Base.metadata.create_all(engine)
+
+
+###
 

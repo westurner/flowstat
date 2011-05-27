@@ -16,6 +16,8 @@ requires = [
     'zope.sqlalchemy',
     'WebError',
     'pyramid_simpleform',
+    'pyramid_jinja2',
+    'Jinja2',
     'cryptacular',
     ]
 

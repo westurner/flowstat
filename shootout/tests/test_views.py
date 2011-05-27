@@ -20,6 +20,9 @@ def _registerRoutes(config):
     config.add_route('tag', '/tags/{tag_name}')
     config.add_route('idea_add', '/idea_add')
     config.add_route('idea_vote', '/idea_vote')
+
+    config.add_route('sparql_query', '/sparql')
+
     config.add_route('register', '/register')
     config.add_route('login', '/login')
     config.add_route('logout', '/logout')
@@ -31,6 +34,7 @@ def _registerCommonTemplates(config):
     config.testing_add_renderer('templates/toolbar.pt')
     config.testing_add_renderer('templates/cloud.pt')
     config.testing_add_renderer('templates/latest.pt')
+    config.testing_add_renderer('templates/sparql_query.jinja2')
 
 class ViewTests(unittest.TestCase):
     def setUp(self):
