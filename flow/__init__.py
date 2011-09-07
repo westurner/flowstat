@@ -4,9 +4,9 @@ from pyramid.authorization import ACLAuthorizationPolicy
 from pyramid.session import UnencryptedCookieSessionFactoryConfig
 
 from sqlalchemy import engine_from_config
-
 from flow.models import initialize_sql
 
+from flow.rdfmodels import initialize_rdflib
 
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.
@@ -14,12 +14,13 @@ def main(global_config, **settings):
     engine = engine_from_config(settings, 'sqlalchemy.')
     initialize_sql(engine)
 
+    initialize_rdflib(virtuoso_connstr=settings['rdflib.virtuoso_connstr'])
+
     session_factory = UnencryptedCookieSessionFactoryConfig('secret')
 
     authn_policy = AuthTktAuthenticationPolicy('s0secret')
     authz_policy = ACLAuthorizationPolicy()
 
-    settings = dict(settings)
     settings.setdefault('jinja2.i18n.domain', 'flow')
 
     config = Configurator(
@@ -46,6 +47,7 @@ def main(global_config, **settings):
     config.add_route('idea_vote', '/idea_vote')
 
     config.add_route('sparql_query', '/sparql')
+    config.add_route('deniz', '/browse')
 
     config.add_route('register', '/register')
     config.add_route('login', '/login')

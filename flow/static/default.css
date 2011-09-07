@@ -1,4 +1,6 @@
+
 /* SET MARGIN AND PADDING TO 0 FOR ALL ELEMENTS */
+/*
 * {
 margin: 0; padding: 0;
 }
@@ -47,7 +49,7 @@ dl ul, dl ol, dl dir, dl menu, dl dl
 ul, ol, dl {list-style-type: disc;}
 
 body {
-	background: #666;
+	background: #666 !important; /* override */
 }
 
 body, input, textarea, select {
@@ -101,33 +103,34 @@ a:hover {
 }
 
 a:link, a:visited {color: #5979b7;}
-
+*/
 
 /* Wrapper */
 
 #wrapper {
-	width: 942px;
-	margin: 0px auto;
 	background-color: #FFFFFF;
+    width: 100%;
+}
+
+.container {
+    width: 100% !important;
 }
 
 /* Header */
 
 #header {
-	height: 180px;
-	width: 942px;
-	position: relative;
 	background: #6E6E6E no-repeat;
-	margin: 0px auto;
+    height: 56px;
+    padding: 10px;
 }
 
 #header h1, #header h2 {
 }
 
 #header h1 {
-	position: absolute;
+	/*position: absolute;
 	top: 13px;
-	left: 20px;  
+	left: 20px;   */
 	font-size: 3em;
 	letter-spacing: -2px;
 	text-decoration: none;
@@ -135,29 +138,21 @@ a:link, a:visited {color: #5979b7;}
 }
 
 #header h2 {
-	position: absolute;
+	/*position: absolute;
 	top: 55px;
-	left: 30px;  
+	left: 30px;  */
 	font-size: 1em;
 	text-decoration: none;
 	color: #FFF;
 }
 
-#header:after {
-	content: ".";
-	display: block;
-	height: 0;
-	clear: both;
-	visibility: hidden;
-}
 
 /* Menu */
 
 #menu
 {
-	width: 928px;
-	position: absolute;
-	margin: -40px 0;
+	/*width: 928px;*/
+	background: #5E5E5E no-repeat;
 }
 
 #menu ul
@@ -212,18 +207,15 @@ a:link, a:visited {color: #5979b7;}
 #content {
 	background: #FFFFFF  repeat-y;
 	border-top: 5px solid #C8C8C8;
-	border-bottom: 1px solid #C8C8C8;
-	margin: 0px auto;
-	width: 928px;
 }
 
 /* Blog */
 
 #main {
-	float: right;
+    /*
 	width: 678px !important;
 	width: 675px; /*IE6 3px problem */
-	margin: 0px auto;
+	/* margin: 0px auto; */
 }
 
 /* Post */
@@ -254,7 +246,6 @@ a:link, a:visited {color: #5979b7;}
 }
 
 #sections .byline{
-	margin-top: -73px;
 	text-align: right;
 	font-size: 90%;
 	padding: 0px;
@@ -267,18 +258,14 @@ a:link, a:visited {color: #5979b7;}
 }
 
 #sections .text {
-	padding: 10px 20px 10px 20px;
-	line-height: 1.8em;
 }
 
 #sections h1 {
-        margin: 25px 5px 5px 5px;
 }
 
 #sections p {
 	text-align: justify;
         font-size: 120%;
-        margin: 5px 5px 5px 5px;
 }
 
 #sections ul {
@@ -298,15 +285,11 @@ a:link, a:visited {color: #5979b7;}
 /* Sidebar */
 
 #sidebar {
-	float: left;
-	width: 250px;
 	padding-top: 5px;
-	margin: 0px auto;
     background: #eee;
 }
 
 #sidebar div {
-	margin: 0;
 	padding: 0 10px;
 }
 
@@ -385,9 +368,7 @@ a:link, a:visited {color: #5979b7;}
 /* Footer */
 
 #footer {
-	width: 928px;
 	height: 50px;
-	margin: 0px auto;
 }
 
 #footer p {
@@ -401,7 +382,6 @@ a:link, a:visited {color: #5979b7;}
 }
 
 #toolbar {
-        padding: 10px; 5px;
         float: right;
         font-size: 90%;
 }
@@ -435,7 +415,6 @@ a:link, a:visited {color: #5979b7;}
 }
 
 .subtitle {
-        margin: 15px 5px 5px 5px;
         font-size: 140%;
         font-weight: normal;
 }

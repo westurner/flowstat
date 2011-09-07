@@ -1,19 +1,32 @@
-<html>
-<head>
-<title>{{ title }}</title>
-</head>
-<body>
+{% extends "base.jinja2" %}
+
+{% block contentframe %}
+
+<div class="block">
+<div id="main" class="column span-24 " style="padding: 1%">
+    
+        <a href="http://localhost:8890/sparql">Virtuoso SPARQL</a>
 
 {{ form.begin(request.route_url('sparql_query'), id="sparql_query") }}
     {{ form.errorlist() }}
-    {{ form.label("q","SPARQL Query") }}
-    {{ form.textarea("q", content=query, cols=80, rows=10) }}
-    {{ form.submit("form.submitted","Go") }}
+    {{ form.label("query","SPARQL Query") }}
+    {{ form.textarea("query", content=query, cols=120, rows=4, style="width:100%; height:120px") }}
+
+    <div class="clear"> &nbsp; </div>
+
+    {{ form.label("format","Output Format") }}
+    {{ form.select("format",options=[('json','JSON'), ('xml','XML')]) }}
+
+    <div class="clear">&nbsp;</div>
+    {{ form.submit("form.submitted","Go",style="width:100%; height=200px") }}
     {{ form.csrf_token() }}
 {{ form.end() }}
 
-<div>
-    <pre> {{ results }} </pre>
 </div>
-</body>
-</html>
+</div>
+<div class="block"
+<div class="column span-24">
+    <pre style="border:1px solid #ccc; width:100%; " cols=120> {{ results }} </pre>
+</div>
+</div>
+{% endblock contentframe %}

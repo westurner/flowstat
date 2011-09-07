@@ -7,17 +7,21 @@
     <h1>${tag}</h1>
     <ul>
         <li tal:repeat="idea ideas">
+            <div class="idea">
+            <a href="${request.route_url('idea', idea_id=idea.idea_id)}">${idea.title}</a>, by 
+            <a class="byline" href="${request.route_url('user', username=idea.author.username)}">
+                ${idea.author.name}
+            </a>
+        </div>
+        <div>
+            <span class="hits">${idea.hits}</span> hits,
+            <span class="misses">${idea.misses}</span> misses.
+        </div>
             <span class="tags">
                 <a tal:repeat="tag idea.tags" href="${request.route_url('tag', tag_name=tag.name)}">
                     ${tag.name}
                 </a>
             </span>
-            <a href="${request.route_url('idea', idea_id=idea.idea_id)}">${idea.title}</a>, by 
-            <a class="byline" href="${request.route_url('user', username=idea.author.username)}">
-                ${idea.author.name}
-            </a>
-            <span class="hits">${idea.hits}</span> hits,
-            <span class="misses">${idea.misses}</span> misses.
         </li>
     </ul>
 </tal:block>

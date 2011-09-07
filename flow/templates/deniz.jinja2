@@ -1,0 +1,150 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
+{% extends "base.jinja2" %}
+<head>
+    <meta http-equiv="Content-type" content="text/html; charset=UTF-8"/>
+    {% block extracss %}
+<link type="text/css" href="{{  request.static_url('flow:static/deniz/lib/jquery-ui.css') }}" rel="stylesheet"/>
+<style type="text/css">
+<!--
+body { font-family: Verdana,Arial,sans-serif; }
+h1 { font-size: 1.3em; }
+h1 a { text-decoration: none; color: black; }
+#content { padding: 6px; }
+#sparql { width: 99%; }
+#sparqloptions { float: right; }
+#endpointoption form { display: inline-block; }
+#endpointoption input { width: 20em; display: none; }
+#endpointoption .optionvalue { width: 20em; }
+#endpointoption .optionvalue .edithint { visibility: hidden; margin-left: 5px; }
+#endpointoption .optionvalue:hover .edithint { visibility: visible; }
+#endpoint-ajax-loader { position: relative; left: -20px; vertical-align: middle; display: none; }
+#query { width: 100%; height: 6em; border: 1px #ddd solid; padding: 3px; }
+.caption { margin-bottom: 5px; font-size: 2em }
+#buttons button { float: right; }
+.resulttable { border-spacing: 0; clear: both; margin: 0 auto 20px auto; width: 100%; }
+.resulttable thead th { background: #dbdbdb; }
+.resulttable th { border-bottom: 1px solid #a9a9a9; }
+.resulttable td { max-width: 600px; word-wrap: break-word; }
+.resulttable tbody tr:nth-child(even) td, .resulttable tbody tr.even td  { background: #e9e9e9; }
+.results tr.odd { background-color: #e9e9e9; }
+.results tr.even { background-color: #eef; }
+.results td { padding: 1px 2px; border: 1px solid #f0f0f0 }
+.morebtn { text-align: center; }
+#footer { width: 100%;}
+#footer #footercontent { color: #888; padding: 5px; }
+#footer a { font-weight: bold; color: #888; text-decoration: none; }
+#footer a:visited { color: #666; }
+#footer a:hover { text-decoration:underline; }
+#footer a:active { text-decoration:underline; }
+.spo_results td { min-width: 8em; max-width: 600px; }
+
+html, body, #container { height: 100%; margin: 0; padding: 0; }
+body > #container { height: auto; min-height: 100%; }
+#content { padding-bottom: 3.5em; }
+#footer { clear: both; position: relative; z-index: 10; height: 3.5em; margin-top: -3.5em; }
+
+</style>
+{% endblock extracss %}
+{% block extrajs %}
+<script type="text/javascript" src="{{  request.static_url('flow:static/deniz/lib/jquery.js') }}"></script>
+<script type="text/javascript" src="{{  request.static_url('flow:static/deniz/lib/jquery-ui.js') }}"></script>
+<script type="text/javascript" src="{{  request.static_url('flow:static/deniz/lib/codemirror.js') }}"></script>
+<script type="text/javascript" src="{{  request.static_url('flow:static/deniz/lib/jquery.history.js') }}"></script>
+<script type="text/javascript" src="{{  request.static_url('flow:static/deniz/lib/jquery.cookie.js') }}"></script>
+{% endblock extrajs %}
+{% block title %}rdf browser{% endblock title %}
+</head>
+<body>
+    <div id="container">
+        <div id="content">
+            {% block contentframe %}
+    <script type="text/javascript">
+        deniz_root="{{ request.static_url('flow:static/deniz') }}";
+    </script>
+    <script type="text/javascript" src="{{ request.static_url('flow:static/js/denz.js') }}"> </script>
+
+<div id="main" class="column span-24">
+
+<div id="sparql">
+    <div id="sparqloptions">
+        <div id="endpointoption">Endpoint: <span class="optionvalue" title="Click to edit"><span></span><img class="edithint" src="{{ request.static_url('flow:static/deniz/lib/pencil.png') }}" alt="edit"/></span>
+            <form action="#" name="sparqloptionsform" id="sparqloptionsform">
+                <input type="text" name="endpoint"/>
+                <span id="endpoint-ajax-loader"><img src="{{ request.static_url('flow:static/deniz/lib/ajax-loader-small.gif') }}" alt="loading"/></span>
+            </form>
+        </div>
+    </div>
+    <div style="clear:both">&nbsp;</div>
+    <div id="query" class="editbox"></div>
+    <div id="buttons">
+        <button type="submit" id="executebtn" name="executebtn"><span class="ui-button-text">Execute</span></button>
+    </div>
+</div>
+<div style="clear: both"></div>
+<div id="query_results" class="query_results">
+    <div class="caption">Results</div>
+    <div class="result_container"></div>
+</div>
+<div id="subject_results" class="spo_results">
+    <div class="caption">As <strong>subject</strong></div>
+    <div class="result_container"></div>
+</div>
+<div id="predicate_results" class="spo_results">
+    <div class="caption">As <strong>predicate</strong></div>
+    <div class="result_container"></div>
+</div>
+<div id="object_results" class="spo_results">
+    <div class="caption">As <strong>object</strong></div>
+    <div class="result_container"></div>
+</div>
+
+<div id="type_results" class="spo_results">
+    <div class="caption">As <strong>type</strong></div>
+    <div class="result_container"></div>
+</div>
+
+<div id="graph_results" class="spo_results">
+    <div class="caption">As <strong>graph</strong></div>
+    <div class="result_container"></div>
+</div>
+
+<div id="browsingmenu" style="display: none;">
+    <div id="browsebygraphs">
+        <div class="caption">Browse store by <strong>graphs</strong></div>
+        <div class="result_container"></div>
+    </div>
+
+    <div id="browsebyconcepts">
+        <div class="caption">Browse store by <strong>concepts</strong></div>
+        <div class="result_container"></div>
+    </div>
+</div>
+
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+    content = $('#query').text();
+    CodeMirrorConfig.height='10em';
+    var editor = new CodeMirror($('#query')[0], {
+        path: '/static/cm1/js/', 
+        parserfile: deniz_root + "/lib/codemirror_inframe.js",
+        stylesheet: deniz_root + "/lib/sparqlcolors.css",
+        saveFunction: function() {
+            window.location.hash = editor.getCode().replace(/\n/g, ' ');
+        },
+        autoMatchParens: true,
+        content: function() {
+            if (window.location.hash && window.location.hash != '#')
+                return window.location.hash.replace(/^#/, '');
+            else
+                return initial_query;
+        }()
+    });
+//]]>
+</script>
+{% endblock contentframe %}
+</div>
+</div>
+</body></html>
