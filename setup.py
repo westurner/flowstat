@@ -25,7 +25,7 @@ if sys.version_info[:3] < (2,5,0):
     requires.append('pysqlite')
 
 setup(name='flow',
-      version='0.1',
+      version='0.2',
       description='',
       long_description=README + '\n\n' +  CHANGES,
       classifiers=[
@@ -41,6 +41,9 @@ setup(name='flow',
       license="BSD-derived (http://www.repoze.org/LICENSE.txt)",
       packages=find_packages(),
       include_package_data=True,
+      package_data={
+          'flow': ['flow/scripts/*.diff','flow/scripts/*.sh'],
+      },
       zip_safe=False,
       test_suite='flow.tests',
       install_requires = requires,
