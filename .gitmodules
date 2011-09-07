@@ -1,0 +1,3 @@
+[submodule "flow/static/dnz"]
+	path = flow/static/dnz
+	url = https://github.com/cburgmer/deniz.git
