@@ -1,0 +1,30 @@
+
+{% extends "base.jinja2" %}
+{% block content %}
+{% if form %}
+{{ form.begin('/factors') }}
+{{ form.csrf_token() }}
+<div class="errors"}> {{ form.errorlist() }} </div>
+<div class="fields">
+    <div class="field">
+    {{ form.label("one") }}
+    {{ form.text("one") }}
+    </div>
+    <div class="field">
+    {{ form.label("two") }}
+    {{ form.text("two") }}
+    </div>
+    <div class="field">
+    {{ form.label("format") }}
+    {{ form.select("format", ["json", "xml", "png", "graphml"]) }}
+    </div>
+    {{ form.submit("submit") }}
+</div>
+{{ form.end() }}
+{% endif %}
+{% if data %}
+<textarea>
+{{ data }}
+</textarea>
+{% endif %}
+{% endblock content %}

@@ -22,13 +22,13 @@ from flow.models import DBSession
 from flow.models import User, Idea, Tag
 
 @view_config(permission='view', route_name='main',
-             renderer='templates/main.pt')
+             renderer='templates/main.jinja2')
 def main_view(request):
     hitpct = Idea.ideas_bunch(Idea.hit_percentage.desc())
     top = Idea.ideas_bunch(Idea.hits.desc())
     bottom = Idea.ideas_bunch(Idea.misses.desc())
     last10 = Idea.ideas_bunch(Idea.idea_id.desc())
-    
+
     toplists = [
         {'title': 'Latest shots', 'items': last10},
         {'title': 'Most hits', 'items': top},
@@ -37,7 +37,7 @@ def main_view(request):
     ]
 
     login_form = login_form_view(request)
-    
+
     return {
         'username': authenticated_userid(request),
         'toolbar': toolbar_view(request),
@@ -162,7 +162,7 @@ def idea_add(request):
         if tags:
             idea.tags = tags
 
-        session.add(idea)            
+        session.add(idea)
         redirect_url = route_url('idea', request, idea_id=idea.idea_id)
 
         return HTTPFound(location=redirect_url)
@@ -256,7 +256,7 @@ def login_view(request):
             headers = remember(request, login)
             request.session.flash(u'Logged in successfully.')
             return HTTPFound(location=came_from, headers=headers)
-    
+
     request.session.flash(u'Failed to login.')
     return HTTPFound(location=came_from)
 
@@ -274,7 +274,7 @@ def toolbar_view(request):
     viewer_username = authenticated_userid(request)
     return render(
         'templates/toolbar.pt',
-        {'viewer_username': viewer_username}, 
+        {'viewer_username': viewer_username},
         request
     )
 
