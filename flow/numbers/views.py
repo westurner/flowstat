@@ -8,7 +8,7 @@ from pyramid_simpleform.renderers import FormRenderer
 from collections import defaultdict
 import networkx as nx
 import networkx.readwrite.json_graph.serialize as nxjson
-from flow.primes.primes import build_factor_graph, primefactors, count_sorted_list_items, factordict_to_str
+from flow.numbers.primes import build_factor_graph, primefactors, count_sorted_list_items, factordict_to_str
 
 
 def get_factor_graph(n, maxdepth):
