@@ -15,8 +15,8 @@ from pkg_resources import resource_stream, resource_filename
 from itertools import izip, ifilter, repeat
 from pprint import pformat
 
-from flow.models import RSTContext, format_numbered_line_iter
-from flow.utils import grep_file
+from flow.graphs.models import RSTContext, format_numbered_line_iter
+from flow.graphs.utils import grep_file
 
 #from sage.misc.sageinspect import sage_getargspec # ast
 

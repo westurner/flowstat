@@ -6,8 +6,7 @@ from pyramid.renderers import JSONP
 
 from sqlalchemy import engine_from_config
 from flow.models import initialize_sql
-
-from flow.rdfmodels import initialize_rdflib
+from flow.models.rdfmodels import initialize_rdflib
 
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.
