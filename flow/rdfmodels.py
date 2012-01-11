@@ -32,7 +32,7 @@ def store_from_virtuoso_connstr(config_string):
 
 def store_from_connstr(config_string):
     store = plugin.get('MySQL', rdflib.store.Store)('rdfstore')
- 
+
     ret = store.open(config_string,create=False)
     if ret == 0:
         store.open(config_string,create=True)
@@ -66,7 +66,7 @@ def get_session_uri(base):
 
 def initialize_rdflib(engine=None, mysql_connstr=None, virtuoso_connstr=None, clear=False, logging=True):
 
-    rdflib.plugin.register('MySQL',  rdflib.store.Store,'rdfstorage.MySQL', 'MySQL')
+    #rdflib.plugin.register('MySQL',  rdflib.store.Store,'rdfstorage.MySQL', 'MySQL')
     rdflib.plugin.register('sparql', rdflib.query.Processor,'rdfextras.sparql.processor', 'Processor')
     rdflib.plugin.register('sparql', rdflib.query.Result, 'rdfextras.sparql.query', 'SPARQLQueryResult')
 
@@ -77,7 +77,7 @@ def initialize_rdflib(engine=None, mysql_connstr=None, virtuoso_connstr=None, cl
     #elif virtuoso_connstr:
     #    store = store_from_virtuoso_connstr(virtuoso_connstr)
 
-    rdf_store = surf.Store( 
+    rdf_store = surf.Store(
                         reader='virtuoso_protocol',
                         writer='virtuoso_protocol',
                         endpoint='http://localhost:8890/sparql',
@@ -85,7 +85,7 @@ def initialize_rdflib(engine=None, mysql_connstr=None, virtuoso_connstr=None, cl
 
     if clear:
         rdf_store.clear()
-    
+
     #print 'SIZE of STORE : ',rdf_store.size()
 
     # the surf session
@@ -119,7 +119,7 @@ def build_rule_network(rulesets):
     :returns: Initialized **in-memory** Rule network
     """
     # Build Rule Network
-    rule_store, rule_graph, network = SetupRuleStore(None, None, True)                                              
+    rule_store, rule_graph, network = SetupRuleStore(None, None, True)
     network.inferredFacts = Graph(   ) # raptor_world
 
     for ruleset_path in rulesets:
@@ -141,7 +141,7 @@ def infer_triples_from_graph(graph, network):
     :param graph: Data Graph
     :param network: Rule Network
 
-    :returns: Rule network applied to 
+    :returns: Rule network applied to
     """
     #
     logging.debug("inferring from %d triples and %d rules" % (
@@ -170,12 +170,12 @@ def infer_triples_from_graph(graph, network):
 
 def infer_and_merge_triples(graph, network):
     network = infer_triples_from_graph(graph, network)
-   
+
     graph = merge_inferred_facts_into_graph(graph, network)
     return graph #, network
 
 def merge_inferred_facts_into_graph(graph, network, commit=True):
-    
+
     logging.debug("Merging %d inferred facts from network into graph" % (len(network.inferredFacts)))
 
     for fact in network.inferredFacts:
@@ -211,7 +211,7 @@ def import_uri(graph, uri, format, dest=None):
     t_diff = t_post - t_pre
     per_triple_avg = len_diff / t_diff
 
-    logging.debug(" ... Loaded %d triples in %.4f seconds (%.4f t/s)" % 
+    logging.debug(" ... Loaded %d triples in %.4f seconds (%.4f t/s)" %
             (len_diff,
             t_diff,
             per_triple_avg
@@ -258,7 +258,7 @@ class TestIt(unittest.TestCase):
             graph = load_uris_into_graph(graph, slurpq)
             network = build_rule_network(rulesets=DEFAULT_RULE_PATHS)
             network = infer_triples_from_graph(graph, network)
-        
+
             graph = merge_inferred_facts_into_graph(graph, network, commit=True)
 
         # Execute SPARQL Query
@@ -324,7 +324,7 @@ def main():
         """
 
         print graph.serialize(format='n3')
- 
+
     if opts.ipython:
         #import sys
         import IPython

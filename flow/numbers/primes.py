@@ -10,7 +10,7 @@ See: http://stackoverflow.com/questions/4643647/fast-prime-factorization-module
 import random
 import operator
 from collections import defaultdict
-from itertools import product
+from itertools import product, repeat
 
 
 def primesbelow(N):
@@ -217,7 +217,7 @@ def all_factors(n):
     return _all_factors(count_sorted_list_items(primefactors(n)))
 
 
-def build_factor_graph(n, depth=1):
+def build_factor_graph(n, depth=1, maxdepth=1):
     """
     Given n, generate a list of edges:
      + Prime factors of n
@@ -231,18 +231,23 @@ def build_factor_graph(n, depth=1):
     :returns: generator of edge tuples
     :rtype: generator
     """
+
     if n <= 1:
         raise ValueError('n must be greater than 1')
-    if isprime(n):
-        raise ValueError('n is prime')
 
+    # yield ('', n, 'loneliest', 1, inf.)
+    if not (depth-1):
+        yield ('', n, 'self', n, 1)
+    if isprime(n):
+        return
+        #raise ValueError('n is prime')
 
     lbl_primefactor = 'primeFactor'
     lbl_subfactor = 'factor'
 
     depthstr = ' '*depth
 
-    prime_factors = dict( count_sorted_list_items(primefactors(n)) )
+    prime_factors = dict( count_sorted_list_items(primefactors(n,sort=True)) )
 
     for f, power in prime_factors.iteritems():
         yield (depthstr, n, lbl_primefactor, f, power)
@@ -252,8 +257,9 @@ def build_factor_graph(n, depth=1):
     for f in factors:
         if f != n and f not in prime_factors:
             yield (depthstr, n, lbl_subfactor, f, 1)
-            for f in build_factor_graph(f, depth=depth+1):
-                yield f
+            if not maxdepth or depth < maxdepth:
+                for f in build_factor_graph(f, depth=depth+1, maxdepth=maxdepth):
+                    yield f
 
 def main():
     """
@@ -303,6 +309,13 @@ def count_sorted_list_items(items):
             prev_item = item
     yield (item, count)
     return
+
+def factordict_to_str(n, factors):
+    return (' * '.join(
+                ( (
+                    (count >1) and '%s**%s' % (f, count,) or str(f))
+                        for f,count in factors)))
+
 
 import unittest
 
@@ -387,6 +400,26 @@ if __name__ == "__main__":
 
     prs = optparse.OptionParser(usage="./")
 
+    prs.add_option('-g','--factor-graph',
+                    dest='build_factor_graph',
+                    type='int',
+                    action='store',
+                    )
+    prs.add_option('-m','--max-depth',
+                    dest='max_depth',
+                    type='int',
+                    default=1,
+                    action='store',)
+
+    prs.add_option('-p','--prime-factors',
+                    dest='build_prime_factors',
+                    type='int',
+                    action='store',)
+    prs.add_option('-x','--expand',
+                    dest='expand_prime_factors',
+                    action='count',)
+
+
     prs.add_option('-v', '--verbose',
                     dest='verbose',
                     action='store_true',)
@@ -396,11 +429,6 @@ if __name__ == "__main__":
     prs.add_option('-t', '--test',
                     dest='run_tests',
                     action='store_true',)
-
-    prs.add_option('-n', '--num',
-                    dest='factor_num',
-                    type='int',
-                    action='store',)
 
     (opts, args) = prs.parse_args()
 
@@ -416,9 +444,34 @@ if __name__ == "__main__":
         import unittest
         exit(unittest.main())
 
-    if opts.factor_num:
-        n=int(opts.factor_num)
-        for edge in build_factor_graph(n):
+    if opts.build_prime_factors:
+        n=opts.build_prime_factors
+        factors = primefactors(n, sort=True)
+        factors = count_sorted_list_items(factors)
+        print '=',n,'='
+        if not opts.expand_prime_factors:
+            for f in factors:
+                print f
+        else:
+            factors = list(factors)
+            for f, c in factors:
+                print '**'.join((str(f),str(c))),'=',f**c
+
+            print '\n',
+
+            if opts.expand_prime_factors > 2:
+                print ' * '.join(
+                            ('*'.join(str(x) for x in repeat(f,count)))
+                                for f, count in factors),'=', n
+                print '\n',
+            elif opts.expand_prime_factors > 1:
+                print ' * '.join(
+                        ('%s**%s' % (f, count,)
+                            for f,count in factors)),'=', n
+                print '\n',
+
+    if opts.build_factor_graph:
+        for edge in build_factor_graph(opts.build_factor_graph, maxdepth=opts.max_depth):
             print edge
 
     main()

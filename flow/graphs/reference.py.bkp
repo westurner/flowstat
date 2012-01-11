@@ -1,0 +1,271 @@
+#!/usr/bin/env python
+from __future__ import print_function
+"""
+Scan and generate documentation for nx.generators.{ }
+
+
+TODO:
+- map argspec_all : name, type, gui control
+- extract default parameter sets from tests grep
+- draw graph visualization (frontend)
+  - networkx-d3
+  - graphviz?
+  - thumbnails
+- build step: network x algorithms
+- ipython [notebook] integration
+
+views:
+
+    per-graph:
+
+        graph visualization
+        standard properties
+        standard algorithms
+
+        later...
+        sliders for relevant param set
+        set sliders by selecting from default parameter sets
+        custom graph persistence (url patterns? -> caching)
+
+    index:
+
+        graph generators tree (.. contents:: tree)
+        graph generators thumbnail grid
+
+
+"""
+import networkx as nx
+import inspect
+import codecs
+from pkg_resources import resource_stream, resource_filename
+from itertools import izip, count
+
+def grep_file(
+        filename=None,
+        fileobj=None,
+        searchfn=lambda x: x.startswith('G=')):
+    """read, iter, searchfn, repeat
+
+    :rtype: generator
+    :returns: (linenumber, line)
+    """
+    if not fileobj:
+        fileobj = codecs.open(filename, "r", "utf-8")
+    for i, n in izip(count(1), fileobj):
+        n = n.lstrip() # ...
+        if searchfn(n):
+            yield (i, n)
+
+
+def iter_source_lines(obj):
+    """zip inspect.getsourcelines w/ line numberings starting at count"""
+    lines, start = inspect.getsourcelines(obj)
+    for (i, l) in izip(count(start), lines):
+        yield (i, l)
+
+
+def format_numbered_line_iter(iterable, indent=0):
+    """prepend line numberings"""
+    indentstr=' '*indent
+    for (i, l) in iterable:
+        yield '%s%-4d: %s' % (indentstr, i, l.rstrip('\n'))
+
+
+def print_rest_header(text, level='-'):
+    """print rst-underlined header"""
+    print("")
+    print(text)
+    print(level*(len(text)+1))
+
+
+REST_FORMATTED_BLOCK_HEADERS={
+    'default': ('\n'
+                '%s::\n'),
+    'python': ('\n'
+               '%s:\n'
+               '.. code:: python\n')
+}
+
+def print_rest_preformatted(iterable, header=None, indent=4, syntax='default'):
+    indentstr = ' ' * indent
+    header = header or ''
+    header_template = REST_FORMATTED_BLOCK_HEADERS.get(syntax,
+                        REST_FORMATTED_BLOCK_HEADERS['default'])
+
+    print(header_template % header)
+
+    if isinstance(iterable, basestring):
+        iterable = (iterable,)
+    for l in iterable:
+        print("%s%s" % (indentstr, l))
+    print('\n')
+
+
+def print_rest_list(iterable, indent=0, indentstr=None):
+    indentstr = indentstr or (' ' * indent)
+    for l in iterable:
+        print("%s- %s" % (indentstr, l))
+
+
+def print_source_lines(obj, header=None, syntax='python'):
+    print_rest_preformatted(
+        list(format_numbered_line_iter(iter_source_lines(obj))),
+        header=header,
+        syntax=syntax)
+
+
+from collections import defaultdict
+def networkx_graph_generator_reference(generators='all'):
+    """
+    Introspect and iterate over network.generators.<module>.<fn>_graph
+
+    For when sphinx would be too much.
+
+    """
+    tests_path = resource_filename('networkx', 'generators/tests')
+    import sys # ...
+    sys.path.append(tests_path)
+    #generatorlist=('classic', 'small')
+    if generators == 'all':
+        generatorsrc = resource_stream('networkx', 'generators/__init__.py')
+        generatorlist = tuple(
+            n.split('.')[2].split()[0] for n in generatorsrc
+                if n.startswith('from networkx.generators.')
+            )
+    else:
+        generatorlist = tuple(generators)
+
+    doctitle = "networkx reference graphs"
+    print('='*len(doctitle))
+    print(doctitle)
+    print("="*len(doctitle))
+    print(":Version: %s" % nx.__version__)
+    print(":Copyright: NetworkX: %s. %s\n" % (
+        nx.__license__,
+        nx.__author__.replace('\n',', '))
+    )
+
+    print(".. contents::")
+    print("   :depth: 2")
+    print(".. sectnum::")
+    print("\n")
+
+    all_argspecs = defaultdict(list)
+
+    for g in generatorlist:
+        print_rest_header("%s" % g, "=")
+        Generators = getattr(nx.generators, g)
+        if Generators.__doc__:
+            print(Generators.__doc__)
+            print("\n")
+
+        print("\n.. contents:: \n   :local:\n")
+        Functions = [fn for fn in dir(Generators) if fn.endswith('_graph')]
+        if Functions:
+            print(".. Functions:")
+            print_rest_list(Functions, indentstr=('.. '))
+
+        TestsFile, Tests, TestClass, TestFuncs = None, None, None, None
+        try:
+            # nx.generators.tests.test_${g}
+            TestsFile = 'test_%s' % g
+            TestsFilePath = resource_filename(
+                            'networkx', 'generators/tests/%s.py' % TestsFile)
+            Tests = __import__(TestsFile)
+            TestClass = getattr(Tests, 'TestGenerator%s' % g.capitalize())
+            TestFuncs = [fn for fn in dir(TestClass) if fn.startswith("test")]
+        except ImportError:
+            pass
+        except AttributeError:
+            pass
+
+        for graph_fn in Functions:
+            graph_fn_path = "%s.%s" % (g, graph_fn)
+            print_rest_header(graph_fn_path, '-')
+            ReferenceGraph = getattr(Generators, graph_fn)
+            #print(ReferenceGraph)
+
+            print_rest_header('source','~')
+            #print(ReferenceGraph.__doc__)
+
+            argspec=inspect.getargspec(ReferenceGraph)
+            for argname in argspec[0]:
+                all_argspecs[argname].append(graph_fn_path)
+
+            print_rest_preformatted(
+                inspect.formatargspec(argspec),
+                header="``%s`` argspec" % graph_fn)
+            print_source_lines(
+                ReferenceGraph,
+                header="source")
+
+            # extract defaults
+            #for n in (n for n in
+            #           inspect.getsource(ReferenceGraph).split('\n')
+            #               if n.lstrip().startswith('G=')):
+            #    print(n)
+
+            if TestFuncs:
+                for fn in (fn for fn in TestFuncs if graph_fn in fn):
+                    print_rest_header("test_function: ``%s``" % fn, "~")
+                    print_source_lines(getattr(TestClass, fn),
+                        header="``%s``" % fn)
+            #else:
+            #    print_rest_preformatted("# No tests found",
+            #            header="test_functions")
+
+            if Tests:
+
+                print_rest_header('tests grep for ``%s``' % graph_fn, "~")
+
+                test_examples=[]
+                def parse_for_examples(iterable, func_name):
+                    """ Q&D """
+                    filterfunc = lambda nl: ('%s(' % func_name) in nl[1] and '=' in nl[1]
+                    for nl in iterable:
+                        if filterfunc(nl):
+                            test_examples.append(
+                                ('%-79s# %d' %
+                                    ( nl[1].split('=',1)[1].strip(),
+                                      nl[0]) ))# ... TODO: parse
+                        yield nl
+
+                print_rest_preformatted(
+                    format_numbered_line_iter(
+                        parse_for_examples(
+                            grep_file(
+                                filename=TestsFilePath,
+                                searchfn=lambda x: graph_fn in x),
+                            func_name=graph_fn)
+                        ),
+                    header="``networkx.generators.tests.%s``" % TestsFile)
+
+                print_rest_header('test_examples for ``%s``' % graph_fn, "~")
+                print_rest_preformatted(
+                    test_examples,
+                    header='examples')
+
+    def get_argspec_output(all_argspecs):
+        for (k, v) in sorted(all_argspecs.items(),
+                            key=lambda x: len(x[1]),
+                            reverse=True):
+            yield "    - %-24s\t%d\t%s" % (k, len(v), v)
+
+    def print_args_summary(all_argspecs):
+        print_rest_header("arguments","=")
+        print_rest_preformatted(
+            get_argspec_output(all_argspecs),
+            header="argspec")
+
+        for (k, v) in sorted(all_argspecs.items(),
+                            key=lambda x: x[0]):
+            print_rest_header("arg: ``%s``" % k)
+            print_rest_list(('`%s`_' % fn) for fn in v)
+
+    print_args_summary(all_argspecs)
+
+def main():
+    networkx_graph_generator_reference()
+
+if __name__=="__main__":
+    main()
