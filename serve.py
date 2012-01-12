@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-this_file='/media/walrus/workspace/.virtualenvs/movies/bin/activate_this.py'
+import os
+this_file='%s/bin/activate_this.py' % os.environ['VIRTUAL_ENV']
 execfile(this_file, dict(__file__=this_file))
 
 from paste.script.serve import ServeCommand
