@@ -11,13 +11,23 @@ import networkx.readwrite.json_graph.serialize as nxjson
 from flow.numbers.primes import build_factor_graph, primefactors, count_sorted_list_items, factordict_to_str
 
 
-def get_factor_graph(n, maxdepth):
+FACTOR_MAXDEPTH = 3
+
+def get_factor_graph(n, maxdepth=FACTOR_MAXDEPTH):
     g = nx.Graph()
     g.add_node(n, type='self')
     for f in build_factor_graph(n, maxdepth=maxdepth):
         g.add_edge( f[1], f[3], type=f[2], power=f[4], depth=f[0])
 
     return g
+
+def get_factor_range_graph(one, two, maxdepth=FACTOR_MAXDEPTH):
+    # Build NX graph from seq(one,two)
+    g = nx.Graph()
+    for n in xrange(one, two):
+        for f in build_factor_graph(n, maxdepth=maxdepth):
+            g.add_edge(f[1], f[3], type=f[2], power=f[4]) # TODO
+
 
 
 @view_config(route_name='factors_of',
@@ -29,7 +39,10 @@ def factors_of_view_json(request):
     maxdepth = request.matchdict.get('maxdepth', 2)
 
     request.response.content_type = "application/json; charset: utf-8"
-    return nxjson.dumps(get_factor_graph(n, maxdepth))
+    return nxjson.dumps(
+            get_factor_graph(n,
+                maxdepth))
+
 
 @view_config(route_name='factors_of',
             permission='view',
@@ -37,19 +50,29 @@ def factors_of_view_json(request):
             renderer='templates/d3/graph_force.jinja2')
 def factors_of_view_html(request):
     n = int(request.matchdict['n'], 0)
-    maxdepth = 3
 
-    pfactorized=list(count_sorted_list_items(primefactors(n, sort=True)))
+    maxdepth = FACTOR_MAXDEPTH
+    factorized = list(count_sorted_list_items(
+                        primefactors(n,
+                            sort=True)))
+    factorization = factordict_to_str(n, factorized)
+    factorcount_uniq = len(factorized)
+    factorcount = sum(v for k,v in factorized)
+    is_prime = (factorcount == 1)
+
+    #factordata = nxjson.dumps(
+    #               get_factor_graph(n,
+    #                   maxdepth))
+
     return {
-            #'data': nxjson.dumps(get_factor_graph(n, maxdepth)),
             'n': n,
             'maxdepth': maxdepth,
-
-            "isprime": sum(v for f, v in pfactorized) == 1, #
-            "primefactordict": pfactorized,
-            "primefactorization": factordict_to_str(n, pfactorized),
-            "primefactorcount": sum(p for n,p in pfactorized),
-            "primefactorcount_unique": len(pfactorized),
+            "isprime": is_prime,
+            "primefactordict": factorized,
+            "primefactorization": factorization,
+            "primefactorcount": factorcount,
+            "primefactorcount_unique": factorcount_uniq,
+            #data = factordata,
 
             'altreps': {
                 'hex': str(hex(n)),
@@ -67,41 +90,50 @@ def factors_of_view_html(request):
             }
 
 
-class FactorsSchema(formencode.Schema):
-    allow_extra_fields = True
-    # TODO
-    one = formencode.validators.Number(not_empty=True)
-    two = formencode.validators.Number(not_empty=True)
+class FactorSchema(formencode.Schema):
+    allow_extra_fields = False
+
+    n = formencode.validators.Number(not_empty=True)
+    maxdepth = formencode.validators.OneOf([1,2,3]) # ...
     format = formencode.validators.OneOf(['json','xml','png','graphml'])
     #chained_validators = [
     #    formencode.validators.FieldsMatch('pwrd','confirm_pwrd')
     #]
 
+class FactorRangeSchema(formencode.Schema):
+    allow_extra_fields = False
+
+    one = formencode.validators.Number(not_empty=True)
+    two = formencode.validators.Number(not_empty=True)
+    format = formencode.validators.OneOf(['json','xml','png','graphml'])
+    #chained_validators = [
+    #    lambda validate one, two: one <= two
+    ##   formencode.validators.FieldsMatch('one','two'')
+    #]
+
+
 @view_config(permission='view', route_name='factors',
              renderer='templates/factor_graph.jinja2')
 def factors_view(request):
 
-    form = Form(request, schema=FactorsSchema)
+    form = Form(request, schema=FactorRangeSchema)
 
     if 'submit' in request.POST:
         if not form.validate():
             return {'form': form}
         #session = DBSession()
 
-        one, two = form.data['one'], form.data['two']
-        maxdepth = form.data.get('maxdepth',2)
+        one = form.data['one']
+        two = form.data['two']
+
+        maxdepth = form.data.get('maxdepth')
 
         gmeta = defaultdict(None)
         gmeta['id'] = 'TODO: uuid.uuid4()'
 
-        # Build NX graph from seq(one,two)
-        g = nx.Graph()
-        for n in xrange(one, two):
-            for f in build_factor_graph(n, maxdepth=maxdepth):
-                g.add_edge(f[1], f[3], type=f[2], power=f[4]) # TODO
+        g = get_factor_range_graph(one, two, maxdepth=maxdepth)
 
         fmt = form.data.get('format')
-
         if fmt == 'json':
             # FIXME: content-type: []/json; charset: UTF-8
             return {'data': nxjson.dumps(g) }
