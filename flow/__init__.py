@@ -73,8 +73,6 @@ def _register_routes(config):
     config.add_restful_routes('number', NumbersContextFactory,
                                     view=NumberGraphRESTfulView)
 
-    config.add_route('number_form', '/numbers')
-    config.add_route('number_n', '/numbers/{n}')
 
     from .graphs.models import GraphsContextFactory
     from .graphs.views import GraphsRESTfulView
