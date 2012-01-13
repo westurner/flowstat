@@ -1,0 +1,162 @@
+{% extends "base.jinja2" %}
+
+{% block extrajs %}
+<script type="text/javascript" src="/static/d3/d3.js"></script>
+<script type="text/javascript" src="/static/d3/d3.geom.min.js"></script>
+<script type="text/javascript" src="/static/d3/d3.layout.js"></script>
+
+{% endblock extrajs %}
+{% block extracss %}
+<style type="text/css">
+circle.node {
+  stroke: #fff;
+  stroke-width: 1.5px;
+}
+
+.nodetext {
+    pointer-events: none;
+    font: 10px sans-serif;
+}
+
+line.link {
+  stroke: #999;
+  stroke-opacity: .6;
+}
+</style>
+{% endblock extracss %}
+{% block content %}
+<div id="sections">
+<div id="chart"></div>
+</div>
+<script type="text/javascript">
+
+    /// d3opts
+    var graphname = "{{ graphname }}";
+    var data_url = "{{ request.route_url('get_graph', id=graphname) }}.json";
+    var d3conf = {{ d3opts|jsonify }};
+    {# {% if d3opts %}{% for (k,v) in d3opts.iteritems() %}var {{k}} = {{v}}; 
+    {% endfor %}{% endif %} #}
+    /// end d3opts
+
+    var fill = d3.scale.category20();
+
+    var vis = d3.select("#chart")
+        .append("svg:svg")
+            .attr("width", d3conf.width)
+            .attr("height", d3conf.height);
+
+    d3.json(data_url, function(json) {
+        var graph = json.graph;
+        var nodes = json.graph.nodes,
+            links = json.graph.links;
+
+        var force = d3.layout.force()
+            .charge(d3conf.charge)
+            .linkDistance(d3conf.linkdistance)
+            .gravity(d3conf.gravity)
+            .size([d3conf.width, d3conf.height])
+            .nodes(nodes)
+            .links(links)
+            .start();
+
+        var link = vis.selectAll("line.link")
+            .data(links)
+            .enter().append("svg:line")
+            .attr("class", "link")
+            .style("stroke-width", function(d) { return 1 }) //d.power*2;  })
+            .style("stroke", function(d) { return fill(d.type=="type_xyz" ? 0 : 1); })
+            .attr("x1", function(d) { return d.source.x; })
+            .attr("y1", function(d) { return d.source.y; })
+            .attr("x2", function(d) { return d.target.x; })
+            .attr("y2", function(d) { return d.target.y; });
+
+        /*link.append("svg:title")
+            .text(function(d) { return d.type + ": " + d.source.id + " -> " + d.target.id + " (" +
+                    d.power + ")"; }); */
+
+        var node = vis.selectAll("circle.node")
+            .data(nodes)
+            .enter().append("svg:circle")
+            .attr("class", "node")
+            .attr("cx", function(d) { return d.x; })
+            .attr("cy", function(d) { return d.y; })
+            .attr("r", 12)
+            .style("fill", function(d) {
+                    _node = nodes[d.index];
+                    group = (d.group || 0)-((_node && _node.type=='self') ? 1 : 0);
+                    color = fill(group);
+                return color
+                }
+            )
+            .call(force.drag);
+
+        node.append("svg:text")
+            .attr("class", "nodetext")
+            .attr("dx", 12)
+            .attr("dy", ".35em")
+            .text(function(d) { return d.id }); 
+
+        node.append("svg:title")
+            .text(function(d) { return d.id; });
+
+        vis.style("opacity", 1e-6)
+            .transition()
+            .duration(1000)
+            .style("opacity", 1);
+
+        var r = 6; 
+        force.on("tick", function() {
+            node
+            .attr("cx", function(d) {
+                return d.x = Math.max(r, Math.min(d3conf.width - r, d.x)); })
+            .attr("cy", function(d) { 
+                return d.y = Math.max(r, Math.min(d3conf.height - r, d.y)); });
+
+    link.attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; });
+            });
+        });
+
+    </script>
+
+</script>
+
+
+
+{% endblock content %}
+
+{% block sidebar %}
+{% if graphname %}
+<h2><a href="{{ request.route_url('get_graph', id=graphname) }}.html">{{ graphname }}</a></h2>
+
+
+{% for k,v in attributes.iteritems() %}
+    <h2>{{ k }}</h2>
+    <span>{{ v }}</span>
+{% endfor %}
+<h2>Links</h2>
+<ul id="number_links" style="list-style-type:none">
+    <li style="list-style-type:none"><a target="_blank" href="https://google.com/search?q={{ graphname.split('.')[-1] }}">{{graphname}} @Wikipedia</a></li>
+    {#
+    <li><a target="_blank" href="http://en.wikipedia.org/wiki/{{n}}">{{n}} @Wikipedia</a></li>
+    <li><a target="_blank" href="http://mathworld.wolfram.com/{{n}}.html">{{n}} @Wolfram Mathworld</a></li>
+    <li><a target="_blank" href="http://www.wolframalpha.com/input/?i={{n}}">{{n}} @Wolfram Alpha</a></li>
+    #}
+</ul>
+<h2>Download</h2>
+<ul id="download_links" style="list-style-type:none">
+    <li><a href="{{ request.route_url('get_graph', id=graphname) }}.json">{{ graphname }} json</a></li>
+   <li><a href="{{ request.route_url('get_graph', id=graphname) }}.graphml">{{ graphname }} graphml</a></li>
+    <li><a href="{{ request.route_url('get_graph', id=graphname) }}.html">Permalink</a></li>
+</ul>
+{% endif %}
+<h2>Navigation</h2>
+TODO
+{#
+<a href="{{ request.route_url('reference_graph', n=n-1) }}">-1: {{n-1}}</a>
+<a href="{{ request.route_url('reference_graph', n=n+1) }}">+1: {{n+1}}</a>
+#}
+{% endblock sidebar %}
+

@@ -25,12 +25,10 @@ if sys.version_info[:3] < (2,5,0):
     requires.append('pysqlite')
 
 setup(name='flow',
-      version='0.2',
+      version='0.3',
       description='',
       long_description=README + '\n\n' +  CHANGES,
       classifiers=[
-        "Framework :: Pylons",
-        "Framework :: BFG",
         "Intended Audience :: Developers",
         "Programming Language :: Python",
         "Topic :: Internet :: WWW/HTTP",

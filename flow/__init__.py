@@ -5,8 +5,8 @@ from pyramid.session import UnencryptedCookieSessionFactoryConfig
 from pyramid.renderers import JSONP
 
 from sqlalchemy import engine_from_config
-from flow.models import initialize_sql
-from flow.models.rdfmodels import initialize_rdflib
+from .models.sql import initialize_sql
+from .models.rdf import initialize_rdflib
 
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.
@@ -27,10 +27,13 @@ def main(global_config, **settings):
     settings.setdefault('jinja2.i18n.domain', 'flow')
 
     config = configure_app(settings,
-            authn_policy, authz_policy, session_factory)
+            authn_policy,
+            authz_policy,
+            session_factory)
 
     config.scan()
     return config.make_wsgi_app()
+
 
 def configure_app(settings, authn_policy, authz_policy, session_factory):
     config = Configurator(
@@ -41,28 +44,48 @@ def configure_app(settings, authn_policy, authz_policy, session_factory):
         session_factory=session_factory
     )
     config.add_translation_dirs('locale/')
-    config.include('pyramid_jinja2')
-    config.add_renderer('jsonp', JSONP(param_name='callback'))
 
-    config.add_subscriber('flow.subscribers.add_base_template',
-                          'pyramid.events.BeforeRender')
+    _register_common_templates(config)
+
+    #config.add_subscriber('flow.subscribers.add_base_template',
+    #'pyramid.events.BeforeRender')
     config.add_subscriber('flow.subscribers.csrf_validation',
                           'pyramid.events.NewRequest')
 
+    _register_routes(config)
+
+    return config
+
+
+def _register_routes(config):
     config.add_static_view('static', 'flow:static')
+
 
 
     config.add_route('sparql_query', '/sparql')
     config.add_route('deniz', '/browse')
 
-    config.add_route('factors', '/factors')
-    config.add_route('factors_of', '/factors/{n}')
+    config.include('pyramid_restler')
+    config.enable_POST_tunneling()
 
+    from .numbers.models import NumbersContextFactory
+    from .numbers.views import NumberGraphRESTfulView
+    config.add_restful_routes('number', NumbersContextFactory,
+                                    view=NumberGraphRESTfulView)
 
+    config.add_route('number_form', '/numbers')
+    config.add_route('number_n', '/numbers/{n}')
+
+    from .graphs.models import GraphsContextFactory
+    from .graphs.views import GraphsRESTfulView
     config.add_route('reference_graph_docs', '/graphs/docs')
-    config.add_route('reference_graph', '/graphs/{graphname}')
-    config.add_route('reference_graphs', '/graphs')
+    config.add_restful_routes('graph', GraphsContextFactory,
+                                    view=GraphsRESTfulView)
 
+    config.add_route('reference_graphs', '/graphs')
+    config.add_route('reference_graph', '/graphs/{graphname}')
+
+    config.add_route('ideas_main', '/ideas')
     config.add_route('idea', '/ideas/{idea_id}')
     config.add_route('user', '/users/{username}')
     config.add_route('tag', '/tags/{tag_name}')
@@ -75,6 +98,24 @@ def configure_app(settings, authn_policy, authz_policy, session_factory):
     config.add_route('about', '/about')
     config.add_route('main', '/')
 
-    return config
 
 
+from flow.views import skipautoescape, jsonify
+
+def _register_common_templates(config):
+    config.add_renderer('jsonp', JSONP(param_name='callback'))
+
+    config.include('pyramid_jinja2')
+    env = config.get_jinja2_environment()
+    env.filters['skipautoescape'] = skipautoescape
+    env.filters['jsonify'] = jsonify
+
+    config.add_view('flow.views.errors.http404',
+            renderer='flow:templates/http404.jinja2',
+            context='pyramid.exceptions.NotFound')
+
+    config.testing_add_renderer('templates/login.jinja2')
+    config.testing_add_renderer('templates/toolbar.jinja2')
+    config.testing_add_renderer('templates/cloud.jinja2')
+    config.testing_add_renderer('templates/latest.jinja2')
+    config.testing_add_renderer('templates/sparql_query.jinja2')

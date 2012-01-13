@@ -3,22 +3,11 @@ import unittest
 
 from pyramid import testing
 
-
-def _initTestingDB():
-    from flow.models import DBSession
-    from flow.models import Base
-    from sqlalchemy import create_engine
-    engine = create_engine('sqlite://')
-    session = DBSession()
-    session.configure(bind=engine)
-    Base.metadata.bind = engine
-    Base.metadata.create_all(engine)
-    return session
-
+from flow.models.sql import _initialize_sql_test
 
 class ModelsTestCase(unittest.TestCase):
     def setUp(self):
-        self.session = _initTestingDB()
+        self.session = _initialize_sql_test()
 
     def tearDown(self):
         import transaction
@@ -26,15 +15,15 @@ class ModelsTestCase(unittest.TestCase):
         testing.tearDown()
 
     def _addUser(self, username=u'username'):
-        from flow.models import User
-        user = User(username=username, pwrd=u'pwrd', name=u'name',
+        from flow.shootout.models import User
+        user = User(username=username, passphrase=u'passphrase', name=u'name',
                     email=u'email')
         self.session.add(user)
         self.session.flush()
         return user
 
     def _addIdea(self, target=None, user=None, title=u'title'):
-        from flow.models import Idea
+        from flow.shootout.models import Idea
         if not user:
             user = self._addUser()
         idea = Idea(target=target, author=user, title=title,
@@ -46,8 +35,8 @@ class ModelsTestCase(unittest.TestCase):
 
 class TestUser(ModelsTestCase):
     def test_add_user(self):
-        from flow.models import User
-        user = User(u'username', u'pwrd', u'name', u'email')
+        from flow.security.models import User
+        user = User(u'username', u'passphrase', u'name', u'email')
         self.session.add(user)
         self.session.flush()
         user = self.session.query(User).filter(User.username == u'username')
@@ -61,40 +50,40 @@ class TestUser(ModelsTestCase):
         self.assertEqual(user.delivered_misses, 0)
 
     def test_doesnt_exitst(self):
-        from flow.models import User
+        from flow.security.models import User
         from sqlalchemy.orm.exc import NoResultFound
         query = self.session.query(User).filter(User.username == u'nobody')
         self.assertRaises(NoResultFound, query.one)
 
     def test_arleady_exist(self):
-        from flow.models import User
+        from flow.security.models import User
         from sqlalchemy.exc import IntegrityError
         self._addUser()
         self.assertRaises(IntegrityError, self._addUser)
 
-    def test_pwrd_hashing(self):
+    def test_passphrase_hashing(self):
         import cryptacular.bcrypt
-        from flow.models import salt_pwrd
+        from flow.security.models import salt_passphrase
         crypt = cryptacular.bcrypt.BCRYPTPasswordManager()
         user = self._addUser()
-        self.assertTrue(crypt.check(user.pwrd, salt_pwrd(u'pwrd')))
+        self.assertTrue(crypt.check(user.passphrase, salt_passphrase(u'passphrase')))
 
-    def test_pwrd_checking(self):
-        from flow.models import User
+    def test_passphrase_checking(self):
+        from flow.security.models import User
         user = self._addUser()
-        self.assertTrue(User.check_pwrd(u'username', u'pwrd'))
-        self.assertFalse(User.check_pwrd(u'username', u'wrong'))
-        self.assertFalse(User.check_pwrd(u'nobody', u'pwrd'))
+        self.assertTrue(User.check_passphrase(u'username', u'passphrase'))
+        self.assertFalse(User.check_passphrase(u'username', u'wrong'))
+        self.assertFalse(User.check_passphrase(u'nobody', u'passphrase'))
 
     def test_getting_by_username(self):
-        from flow.models import User
+        from flow.security.models import User
         user = self._addUser()
         self.assertEqual(user, User.get_by_username(u'username'))
-       
+
 
 class TestTag(ModelsTestCase):
     def test_extracting_tags(self):
-        from flow.models import Tag
+        from flow.shootout.models import Tag
         tags_string = u'foo, bar; baz xxx,, yyy, zzz'
         expected_tags = set([
             u'foo', u'bar', u'baz', u'xxx', u'yyy', u'zzz'
@@ -103,7 +92,7 @@ class TestTag(ModelsTestCase):
         self.assertEqual(extracted_tags, expected_tags)
 
     def test_creating_tags(self):
-        from flow.models import Tag
+        from flow.shootout.models import Tag
         tags = Tag.create_tags(u'foo bar baz')
         tags_names = set([u'foo', u'bar', u'baz'])
         self.assertEqual(tags[0].name, tags_names.pop())
@@ -111,7 +100,7 @@ class TestTag(ModelsTestCase):
         self.assertEqual(tags[2].name, tags_names.pop())
 
     def test_tags_counts(self):
-        from flow.models import Tag, Idea
+        from flow.shootout.models import Tag, Idea
 
         user = self._addUser()
 
@@ -140,12 +129,12 @@ class TestTag(ModelsTestCase):
 class TestIdea(ModelsTestCase):
 
     def _getIdea(self, idea_id):
-        from flow.models import Idea
+        from flow.shootout.models import Idea
         query = self.session.query(Idea).filter(Idea.idea_id == idea_id)
         return query.first()
 
     def test_add_idea(self):
-        from flow.models import Idea
+        from flow.shootout.models import Idea
         user = self._addUser()
         idea = Idea(
             author=user,
@@ -171,7 +160,7 @@ class TestIdea(ModelsTestCase):
         self.assertEqual(idea.vote_differential, 0)
 
     def test_doesnt_exist(self):
-        from flow.models import Idea
+        from flow.shootout.models import Idea
         from sqlalchemy.orm.exc import NoResultFound
         query = self.session.query(Idea).filter(Idea.title == u'Bar')
         self.assertRaises(NoResultFound, query.one)
@@ -214,13 +203,13 @@ class TestIdea(ModelsTestCase):
         self.assertEqual(idea.vote_differential, -5)
 
     def test_get_by_id(self):
-        from flow.models import Idea
+        from flow.shootout.models import Idea
         idea = self._addIdea()
         queried_idea = Idea.get_by_id(idea.idea_id)
         self.assertEqual(idea, queried_idea)
 
     def test_ideas_bunch(self):
-        from flow.models import Idea
+        from flow.shootout.models import Idea
         user = self._addUser()
         idea1 = self._addIdea(user=user)
         idea2 = self._addIdea(user=user, title=u'title3')
@@ -234,11 +223,11 @@ class TestIdea(ModelsTestCase):
                          [idea1, idea4, idea2, idea3])
 
     def test_user_voted(self):
-        from flow.models import Idea
+        from flow.shootout.models import Idea
         idea = self._addIdea()
         voting_user = self._addUser(u'voter')
         idea.voted_users.append(voting_user)
         self.session.flush()
         self.assertTrue(idea.user_voted(u'voter'))
         self.assertFalse(idea.user_voted(u'xxx'))
-    
+

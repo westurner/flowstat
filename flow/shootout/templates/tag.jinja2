@@ -1,0 +1,29 @@
+{% extends "base.jinja2" %}
+{% block content %}
+    <h1>{{ tag }}</h1>
+    <ul>
+        {% for idea in ideas %}
+        <li>
+            <div class="idea">
+            <a href="{{ request.route_url('idea', idea_id=idea.idea_id) }}">
+                {{ idea.title }}</a>, by 
+            <a class="byline" href="{{ request.route_url('user', username=idea.author.username) }}">
+                {{ idea.author.name }}
+            </a>
+        </div>
+        <div>
+            <span class="hits">{{ idea.hits }}</span> hits,
+            <span class="misses">{{ idea.misses }}</span> misses.
+        </div>
+        <span class="tags">
+                {% for tag in idea.tags %}
+                <a href="{{ request.route_url('tag', tag_name=tag.name) }}">
+                    {{ tag.name }}
+                </a>
+                {% endfor %}
+            </span>
+            </li>
+        </li>
+        {% endfor %}
+    </ul>
+{% endblock content %}
