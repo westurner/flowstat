@@ -1,0 +1,49 @@
+{% extends "base.jinja2" %}
+{% block content %}
+    <p>
+        This is a place to discuss and vote on ideas of all kind. Want 
+        to know what others think about your idea? Give it a shot.
+        </p>
+    <p>
+    {% if username %}<a href="idea_add">What's your idea?</a>
+    {% else %}
+    You need to <a href="{{ request.route_url('register') }}">register</a> 
+    or <a href="{{ request.route_url('login') }}">login</a> to be able to post.
+        {% endif %}
+    </p>
+    {% if toplists %}
+    <div id="toplists">
+        {% for toplist in toplists %}
+        <div id="toplists">
+            <h3 class="title">{{ toplist['title'] }}</h3>
+            <ul>
+                {% for idea in toplist['items'] %}
+                <li>
+                    <span class="hits hits{{ idea.hits }}">{{ idea.hits }}⬆ </span>
+                    <span class="misses misses{{ idea.misses }}"> {{ idea.misses }}⬇ </span>
+                    <a class="idea" href="{{ request.route_url('idea', 
+                                            idea_id=idea.idea_id) }}">
+                        {{ idea.title }}
+                    </a> by 
+                    <a class="byline" href="{{ request.route_url('user',
+                                            username=idea.author.username) }}">
+                        {{ idea.author.name }}
+                    </a> 
+
+                    {% for tag in idea.tags %}
+                    <span class="tags">
+                    <a href="{{ request.route_url('tag',
+                            tag_name=tag.name) }}">{{ tag.name }}</a>
+                    </span>
+                    {% endfor %}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+{% endblock content %}
+
+</html>

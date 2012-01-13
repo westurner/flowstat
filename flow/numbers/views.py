@@ -1,40 +1,103 @@
 import formencode
-from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPFound
-#from pyramid.httpexceptions import HTTPNotFound
+from pyramid.exceptions import HTTPNotFound
+from pyramid.httpexceptions import HTTPBadRequest
+
+import networkx.readwrite.json_graph.serialize as nxjson
+from .primes import (get_number, get_factor_graph, FACTOR_MAXDEPTH,
+                    get_factor_range_graph)
+
+from pyramid.renderers import render
 from pyramid_simpleform import Form
 from pyramid_simpleform.renderers import FormRenderer
-
+from pyramid.response import Response
 from collections import defaultdict
-import networkx as nx
-import networkx.readwrite.json_graph.serialize as nxjson
-from flow.numbers.primes import build_factor_graph, primefactors, count_sorted_list_items, factordict_to_str
+from ordereddict import OrderedDict
+
+from pyramid.view import view_config
+from pyramid_restler.view import RESTfulView
+
+#from collections import namedtuple
+#RendererMimetypeTuple = namedtuple('RendererMimetypeTuple', __RENDERERS.iterkeys())
+#_renderers = RendererMimetypes(*RENDERERS.itervalues())
+
+class NumberGraphRESTfulView(RESTfulView):
+    #def render_to_response(self, member):
+    #    raise Exception(member)
+
+    _entity_name = 'number'
+    _renderers = OrderedDict((
+        ('html', (('text/html',), 'utf-8',)),
+        ('json', (('application/json',), 'utf-8')),
+        ('xml', (('application/xml',), 'utf-8')),
+        ('graphml', (('application/graphml',), 'utf-8')),
+    ))
+
+    def determine_renderer(self):
+        request = self.request
+        rendererstr = (request.matchdict or {}).get('renderer', '').lstrip('.')
+
+        if rendererstr:
+            if rendererstr in self._renderers:
+                return rendererstr
+            return 'to_404'
+        for rndrstr, (ct, charset) in self._renderers.iteritems():
+            if request.accept.best_match(ct):
+                return rndrstr
+        return 'to_404'
+
+    def render_to_response(self, value, fields=None):
+        rendererstr = self.determine_renderer()
+        try:
+            renderer = getattr(self, 'render_{0}'.format(rendererstr))
+        except AttributeError:
+            name = self.__class__.__name__
+            raise HTTPBadRequest(
+                '{0} view has no renderer "{1}".'.format(name, rendererstr))
+
+        renderer_output = renderer(value)
+        if 'body' in renderer_output:
+            return Response(**renderer_output)
+
+        return self.render_to_404(value)
+
+    def render_to_404(self, value):
+        # scrub value
+        return HTTPNotFound(self.context)
+
+    def render_json(self, value):
+        renderer=self._renderers['json']
+        response_data = dict(
+            body=self.context.to_json(value, self.fields, self.wrap),
+            charset=renderer[1],
+            content_type=renderer[0][0],
+        )
+        return response_data
+
+    def render_html(self, value):
+        renderer=self._renderers['html']
+        return dict(
+            body=render('numbers/templates/number.jinja2', value,
+                        self.request),
+            charset=renderer[1],
+            content_type=renderer[0][0]
+        )
+
+    def render_graphml(self, value):
+        renderer=self._renderers['graphml']
+        return dict(
+            body=render('graphs/templates/graph.graphml.jinja2',
+                        {'g': value}),
+            charset=renderer[1],
+            content_type=renderer[0][0]
+        )
 
 
-FACTOR_MAXDEPTH = 3
-
-def get_factor_graph(n, maxdepth=FACTOR_MAXDEPTH):
-    g = nx.Graph()
-    g.add_node(n, type='self')
-    for f in build_factor_graph(n, maxdepth=maxdepth):
-        g.add_edge( f[1], f[3], type=f[2], power=f[4], depth=f[0])
-
-    return g
-
-def get_factor_range_graph(one, two, maxdepth=FACTOR_MAXDEPTH):
-    # Build NX graph from seq(one,two)
-    g = nx.Graph()
-    for n in xrange(one, two):
-        for f in build_factor_graph(n, maxdepth=maxdepth):
-            g.add_edge(f[1], f[3], type=f[2], power=f[4]) # TODO
-
-
-
-@view_config(route_name='factors_of',
+@view_config(route_name='number_n',
             permission='view',
             accept='application/json',
             renderer='string')
-def factors_of_view_json(request):
+def number_view_json(request):
     n = int(request.matchdict['n'], 0)
     maxdepth = request.matchdict.get('maxdepth', 2)
 
@@ -44,58 +107,33 @@ def factors_of_view_json(request):
                 maxdepth))
 
 
-@view_config(route_name='factors_of',
+@view_config(route_name='number_n',
             permission='view',
             accept='text/html',
-            renderer='templates/d3/graph_force.jinja2')
-def factors_of_view_html(request):
-    n = int(request.matchdict['n'], 0)
+            renderer='graphs/templates/d3/graph_force.jinja2')
+def number_view_html(request):
+    try:
+        n = int(request.matchdict['n'], 0)
+        maxdepth = FACTOR_MAXDEPTH
+    except:
+        form = Form(request, schema=FactorSchema)
 
-    maxdepth = FACTOR_MAXDEPTH
-    factorized = list(count_sorted_list_items(
-                        primefactors(n,
-                            sort=True)))
-    factorization = factordict_to_str(n, factorized)
-    factorcount_uniq = len(factorized)
-    factorcount = sum(v for k,v in factorized)
-    is_prime = (factorcount == 1)
+        if 'form.submitted' in request.POST and form.validate():
+            n = form.data['n']
+            maxdepth = form.data.get('maxdepth', FACTOR_MAXDEPTH)
 
-    #factordata = nxjson.dumps(
-    #               get_factor_graph(n,
-    #                   maxdepth))
+            return get_number(n, maxdepth)
 
-    return {
-            'n': n,
-            'maxdepth': maxdepth,
-            "isprime": is_prime,
-            "primefactordict": factorized,
-            "primefactorization": factorization,
-            "primefactorcount": factorcount,
-            "primefactorcount_unique": factorcount_uniq,
-            #data = factordata,
 
-            'altreps': {
-                'hex': str(hex(n)),
-                'oct': str(oct(n)),
-                "binary": str(bin(n))[2:],
-                },
-
-            'opts': {
-                'width': 800,
-                'height': 400,
-                'charge': -200,
-                'link_distance': 200,
-                'gravity': 0.05
-                },
-            }
 
 
 class FactorSchema(formencode.Schema):
-    allow_extra_fields = False
+    allow_extra_fields = True
 
     n = formencode.validators.Number(not_empty=True)
     maxdepth = formencode.validators.OneOf([1,2,3]) # ...
     format = formencode.validators.OneOf(['json','xml','png','graphml'])
+    _csrf = formencode.validators.String()
     #chained_validators = [
     #    formencode.validators.FieldsMatch('pwrd','confirm_pwrd')
     #]
@@ -112,15 +150,15 @@ class FactorRangeSchema(formencode.Schema):
     #]
 
 
-@view_config(permission='view', route_name='factors',
-             renderer='templates/factor_graph.jinja2')
-def factors_view(request):
+@view_config(permission='view', route_name='number_form',
+             renderer='graphs/templates/factor_graph.jinja2')
+def number_view(request):
 
     form = Form(request, schema=FactorRangeSchema)
 
     if 'submit' in request.POST:
         if not form.validate():
-            return {'form': form}
+            return {'form': FormRenderer(form)}
         #session = DBSession()
 
         one = form.data['one']
@@ -156,6 +194,7 @@ def factors_view(request):
             return HTTPFound(location=g_graphml_uri)
 
     return {
+        'title': 'numbers',
         'form': FormRenderer(form),
         #'toolbar': toolbar_view(request),
         #'cloud': cloud_view(request),

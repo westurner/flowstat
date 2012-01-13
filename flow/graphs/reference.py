@@ -127,8 +127,11 @@ def parse_for_examples(iterable, func_name, examples=[]):
                 if '=' in arg:
                     k,v=arg.split('=',1)
                     v=v.strip()
-                    kwargs.append(
-                        (k, to_native_type(v, argname=k)))
+                    try:
+                        _v = to_native_type(v, argname=k)
+                    except Exception: ######### ...
+                        _v = v
+                    kwargs.append((k, _v))
                 else:
                     try:
                         args.append(to_native_type(arg))
@@ -191,7 +194,7 @@ def generate_networkx_graph_reference(
         if Generators.__doc__:
             c.print_rest_docstring(Generators)
 
-        fn_filter = str.endswith('_graph')
+        fn_filter = lambda x: x.endswith('_graph')
         Functions = filter(fn_filter, dir(Generators))
         if Functions:
             c.print(".. Functions:")

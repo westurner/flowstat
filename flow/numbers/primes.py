@@ -9,9 +9,9 @@ See: http://stackoverflow.com/questions/4643647/fast-prime-factorization-module
 
 import random
 import operator
+import networkx as nx
 from collections import defaultdict
 from itertools import product, repeat
-
 
 def primesbelow(N):
     """
@@ -216,7 +216,11 @@ def all_factors(n):
         return n
     return _all_factors(count_sorted_list_items(primefactors(n)))
 
+from collections import namedtuple
+FactorEdge = namedtuple('FactorEdge', ['depth', 'n', 'egtype', 'f', 'power'])
 
+lbl_primefactor = 'primeFactor'
+lbl_subfactor = 'factor'
 def build_factor_graph(n, depth=1, maxdepth=1):
     """
     Given n, generate a list of edges:
@@ -242,21 +246,16 @@ def build_factor_graph(n, depth=1, maxdepth=1):
         return
         #raise ValueError('n is prime')
 
-    lbl_primefactor = 'primeFactor'
-    lbl_subfactor = 'factor'
-
-    depthstr = ' '*depth
-
     prime_factors = dict( count_sorted_list_items(primefactors(n,sort=True)) )
 
     for f, power in prime_factors.iteritems():
-        yield (depthstr, n, lbl_primefactor, f, power)
+        yield FactorEdge(depth, n, lbl_primefactor, f, power)
 
     factors = _all_factors(prime_factors.iteritems())
     factors.next() # Skip '1'
     for f in factors:
         if f != n and f not in prime_factors:
-            yield (depthstr, n, lbl_subfactor, f, 1)
+            yield FactorEdge(depth, n, lbl_subfactor, f, 1)
             if not maxdepth or depth < maxdepth:
                 for f in build_factor_graph(f, depth=depth+1, maxdepth=maxdepth):
                     yield f
@@ -310,11 +309,75 @@ def count_sorted_list_items(items):
     yield (item, count)
     return
 
+
+FACTOR_MAXDEPTH = 1
+def get_factor_graph(n, maxdepth=FACTOR_MAXDEPTH):
+    g = nx.Graph()
+    g.add_node(n, type='self')
+    for f in build_factor_graph(n, maxdepth=maxdepth):
+        g.add_edge( f[1], f[3], type=f[2], power=f[4], depth=f[0])
+
+    return g
+
+
+def get_factor_range_graph(one, two, maxdepth=FACTOR_MAXDEPTH):
+    # Build NX graph from seq(one,two)
+    g = nx.Graph()
+    for n in xrange(one, two):
+        for f in build_factor_graph(n, maxdepth=maxdepth):
+            g.add_edge(f[1], f[3], type=f[2], power=f[4]) # TODO
+
+
+def get_factor_dict(n, maxdepth=FACTOR_MAXDEPTH):
+    return count_sorted_list_items(
+                primefactors(n,
+                    sort=True))
+
+
 def factordict_to_str(n, factors):
     return (' * '.join(
                 ( (
                     (count >1) and '%s**%s' % (f, count,) or str(f))
                         for f,count in factors)))
+
+import flow.models.json.nxjson as nxjson
+from ordereddict import OrderedDict
+def get_number(n, maxdepth=None):
+    factorized = list(get_factor_dict(n, maxdepth))
+    factorization = factordict_to_str(n, factorized)
+    factorcount_uniq = len(factorized)
+    factorcount = sum(v for k,v in factorized)
+    is_prime = (factorcount == 1)
+
+    factorgraph = nxjson.node_link_data(
+                        get_factor_graph(n,
+                            maxdepth ))
+
+    return OrderedDict(
+            n=n,
+            title=' = '.join((str(n), str(factorization))),
+            maxdepth=maxdepth,
+            isprime=is_prime,
+            primefactordict=factorized,
+            primefactorization=factorization,
+            primefactorcount=factorcount,
+            primefactorcount_unique=factorcount_uniq,
+            graph=factorgraph,
+
+            attributes=OrderedDict(
+                hex=str(hex(n)),
+                oct=str(oct(n)),
+                binstr=str(bin(n))[2:],
+            ),
+
+            d3opts=dict(
+                width=800,
+                height=400,
+                charge=-184,
+                linkdistance=184,
+                gravity=-0.00
+                ),
+            )
 
 
 import unittest

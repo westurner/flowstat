@@ -1,0 +1,26 @@
+
+{% extends "base.jinja2" %}
+{% block content %}
+{% if form %}
+{{ form.begin(request.route_url('number_form')) }}
+{{ form.csrf_token() }}
+<div class="errors"}> {{ form.errorlist() }} </div>
+<div class="fields">
+    <div class="field">
+    {{ form.label("n") }}
+    {{ form.text("n") }}
+    </div>
+    <div class="field">
+    {{ form.label("format") }}
+    {{ form.select("format", ["html", "json", "xml", "png", "graphml"]) }}
+    </div>
+    {{ form.submit("submit") }}
+</div>
+{{ form.end() }}
+{% endif %}
+{% if data %}
+<textarea>
+{{ data }}
+</textarea>
+{% endif %}
+{% endblock content %}

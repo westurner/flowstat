@@ -136,6 +136,15 @@ class RSTContext(object):
             yield "    - %-24s\t%d\t%s" % (k, len(v), v)
 
 
+
+
+from flow.models.context import PlainContext
+
+from .views import get_graph
+def GraphsContextFactory(request):
+    return PlainContext(request, fn=lambda id: get_graph(str(id)))
+
+
 Argument = namedtuple('Argument', ('name', 'default', 'values', 'functions'))
 
 class ArgSpecRepo(object):
@@ -210,6 +219,8 @@ class TestArgSpecRepo(unittest.TestCase):
 
         for (i,o) in T_ARGSPECS:
             asr.add_mention_argspec(o[0], ast_getargspec(i))
+
+
 
 
 

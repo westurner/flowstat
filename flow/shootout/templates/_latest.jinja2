@@ -1,0 +1,11 @@
+<div id="latest">
+    <h2>Latest Ideas</h2>
+    <ul>
+        {% for idea in latest %}
+        <li>
+        <a class="idea" href="{{ request.route_url('idea', idea_id=idea.idea_id) }}">{{ idea.title }}</a>.
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+

@@ -1,0 +1,42 @@
+
+{% if not loggedin %}
+    <div id="login_form">
+    {% if form %}
+    {{ form.begin( request.route_url('login'), id="login_form" ) }}
+    <fieldset>
+        {#% if form.errorlist %}{{ form.errorlist('username'){% endif %#}
+        {{ form.label('username', 'Username') }}
+        {{ form.text('username', size='76') }}
+        <br />
+        {# form.errorlist('passphrase') #}
+        {{ form.label('passphrase', 'Passphrase') }}
+        {{ form.password('passphrase', size='76') }}
+        <br />
+        {{ form.csrf_token() }}
+        {{ form.submit('form.submitted', 'Log in', class_='submit') }}
+    </fieldset>
+    {{ form.end() }}
+    {% else %}
+    <form id="login_form" action="/login" method="post">
+    <fieldset>
+        <input name="_csrf" type="hidden" value="{{ request.session.get_csrf_token()  }}">
+        <label for="username">Username:</label>
+        <input type="text" name="username" />
+        <br />
+        <label for="passphrase">Passphrase:</label>
+        <input type="password" name="passphrase" />
+        <br />
+        <input class="submit" id="form.submitted" name="form.submitted" type="submit" value="Log In" />
+    </fieldset>
+    </form>
+    </div>
+    {% endif %}
+    {% else %}
+    <div>
+        <ul>
+        {% include "templates/toolbar.jinja2" %}
+        <li><a href="{{ request.route_url('logout') }}">Logout</a></li>
+        <li><a href="{{ request.route_url('main') }}">Home</a></li>
+    </ul>
+    </div>
+{% endif %}

@@ -1,0 +1,7 @@
+<div id="cloud">
+    <h2>Tag Cloud</h2>
+    {% for tag in cloud %}
+    <a href="{{ request.route_url('tag', tag_name=tag[0]) }}"
+        style="font-size: {{ tag[2] }}px">{{ tag[0] }}</a>
+    {% endfor %}
+</div>

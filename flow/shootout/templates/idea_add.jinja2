@@ -1,0 +1,41 @@
+{% extends "base.jinja2" %}
+{% block content %}
+    {% if target %}
+    <div class="instructions" >
+        <p>You are commenting on
+            <a href="{{ request.route_url('idea', idea_id=target.idea_id) }}">
+                {{ target.title }}
+            </a>, by 
+            <a href="{{ request.route_url('user', username=target.author.username) }}">
+                {{ target.author.name }}
+            </a>.
+        </p>
+    </div>
+    {% else %}
+    {# <div class="instructions"><p>Please submit your idea.</p></div>
+    #}
+
+    {{ form.begin(request.route_url('idea_add'), id='idea_add_form') }}
+        <fieldset>
+            {{ form.csrf_token() }}
+            {{ form.errorlist('title') }}
+            {{ form.label('title', 'Title:') }}
+            {{ form.text('title', size="60") }}
+            <br />
+            {{ form.errorlist('tags') }}
+            {{ form.label('tags', 'Tags:') }}
+            {{ form.text('tags', size="60") }}
+            <br />
+            {{ form.errorlist('text') }}
+            {{ form.label('text', 'Text:') }}
+            {{ form.textarea('text', rows="10", cols="60") }}
+            <br />
+            {% if target %}
+            <input type="hidden" name="target" value="{{ target.idea_id }}" />
+            {% endif %}
+            {{ form.submit('form.submitted', 'Create', class_='submit') }}
+        </fieldset>
+        {{ form.end() }}
+
+    {% endif %}
+{% endblock content %}

@@ -6,8 +6,44 @@ from pyramid_simpleform import Form
 from pyramid_simpleform.renderers import FormRenderer
 
 from collections import defaultdict
-import networkx as nx
-import networkx.readwrite.json_graph.serialize as nxjson
+
+from pyramid.renderers import render
+
+#import networkx.readwrite.json_graph.serialize as nxjson
+from flow.models.json import nxjson as nxjson
+
+
+#from pyramid_restler.view import RESTfulView
+
+from ..numbers.views import NumberGraphRESTfulView
+
+class GraphsRESTfulView(NumberGraphRESTfulView):
+    def render_json(self, value):
+        renderer=self._renderers['json']
+        return dict(
+            body=self.context.to_json(value, self.fields, self.wrap),
+            charset=renderer[1],
+            content_type=renderer[0][0],
+        )
+
+    def render_html(self, value):
+        renderer=self._renderers['html']
+        return dict(
+            body=render('graphs/templates/reference_graph.jinja2', value,
+                        self.request),
+            charset=renderer[1],
+            content_type=renderer[0][0]
+        )
+
+    def render_graphml(self, value):
+        renderer=self._renderers['graphml']
+        return dict(
+            body=render('graphs/templates/graph.graphml.jinja2',
+                        {'g': value}),
+            charset=renderer[1],
+            content_type=renderer[0][0]
+        )
+
 
 
 #def get_reference_graph(n, maxdepth):
@@ -18,27 +54,30 @@ import networkx.readwrite.json_graph.serialize as nxjson
 #
 #    return g
 
-def get_reference_graph(cls, argdict):
+from pyramid.util import DottedNameResolver
+dotted_name_resolver = DottedNameResolver()
+
+def get_reference_graph(cls, argdict={}):
+    # TODO reference graph collection
     if isinstance(cls, basestring):
         try:
-            one,two = cls.split('.')
-        except Exception:
-            raise
-            raise ValueError() # TODO: validation
-        try:
-            cls = getattr(getattr(nx.generators, one), two)
+            reference_graph = "networkx.generators.%s" % cls
+            cls = dotted_name_resolver.resolve(reference_graph)
             if not hasattr(cls, '__name__'):
                 raise Exception('not a class') # TODO: validation dict
+        except ImportError:
+            raise
         except AttributeError:
             raise
+    else:
+        raise TypeError()
 
     try:
         # TODO: arguments from test_examples
-        g=cls(argdict.get('n',4))
+        return cls(argdict.get('n', 7))
     except Exception:
         raise
 
-    return g
 
 def build_graph_formset(graph, *args, **kwargs):
     """introspect parameter formset for graph
@@ -46,7 +85,7 @@ def build_graph_formset(graph, *args, **kwargs):
     :returns: {
         'n': 'int:slider',
         'm': 'double:slider:range(0, x, default=y)',
-        # ...
+        /# ...
     }
     """
     pass
@@ -57,48 +96,53 @@ def build_graph_formset(graph, *args, **kwargs):
             renderer='string')
 def reference_graph_view_json(request):
     graphname = request.matchdict.get('graphname')
-    request.response.content_type = "application/json; charset: utf-8"
-    return nxjson.dumps(get_reference_graph(graphname, request.matchdict))
+    request.response_content_type = "application/json; charset: utf-8"
+    return nxjson.dumps(get_graph(graphname))
+
+def get_graph(graphname):
+    g = get_reference_graph(graphname)
+    return dict(
+            graphname=graphname,
+            graph=nxjson.node_link_data(g),
+            title='graph: %s' % graphname,
+            params=dict(
+                n={'name':'n',
+                    'type': 'int',
+                    'default': 7,
+                    'range': [0,1000],
+                    },
+            ),
+            defaults={
+                '0': { 'n': 7 },
+                '1': { 'n': 12 },
+                '2': { 'n': 24 },
+            },
+            attributes=dict(
+                n_nodes=g.number_of_nodes(),
+                n_edges=g.number_of_edges(),
+                #'hex': str(hex(n)),
+                #'oct': str(oct(n)),
+                #"binary": str(bin(n))[2:],
+            ),
+            d3opts=dict(
+                width=800,
+                height=400,
+                charge=-184,
+                linkdistance=80,
+                gravity=0.05
+            ),
+        )
 
 
 @view_config(route_name='reference_graph',
             permission='view',
             accept='text/html',
-            renderer='templates/reference_graph.jinja2')
+            renderer='graphs/templates/reference_graph.jinja2')
 def reference_graph_view_html(request):
     graphname = request.matchdict.get('graphname')
-    g = get_reference_graph(graphname, request.matchdict)
-    return {
-            #'data': nxjson.dumps(get_reference_graph(n, maxdepth)),
-            'graphname': graphname,
-
-            'params': {
-                'n': {'name':'n',
-                        'type': 'int',
-                        'default': 7,
-                        'range': [0,1000],
-                    },
-            },
-            'defaults': {
-                0: { 'n': 7 },
-                1: { 'n': 12 },
-                1: { 'n': 24 },
-            },
-            'altreps': {
-                'n_nodes': g.number_of_nodes(),
-                'n_edges': g.number_of_edges(),
-                #'hex': str(hex(n)),
-                #'oct': str(oct(n)),
-                #"binary": str(bin(n))[2:],
-            },
-            'opts': {
-                'width': 800,
-                'height': 400,
-                'charge': -200,
-                'link_distance': 64,
-                'gravity': 0.05
-                },
-            }
+    request.response.charset = 'utf-8'
+    request.response.content_type = 'application/json'
+    return get_graph(graphname)
 
 
 class ReferenceGraphSchema(formencode.Schema):
@@ -112,7 +156,7 @@ class ReferenceGraphSchema(formencode.Schema):
     #]
 
 @view_config(permission='view', route_name='reference_graphs',
-             renderer='templates/reference_graphs.jinja2')
+             renderer='graphs/templates/reference_graphs.jinja2')
 def references_view(request):
 
     form = Form(request, schema=ReferenceGraphSchema)
@@ -160,6 +204,7 @@ def references_view(request):
             return HTTPFound(location=g_graphml_uri)
 
     return {
+        'title': 'graphs',
         'form': FormRenderer(form),
         'altreps': {},
         #'toolbar': toolbar_view(request),

@@ -1,0 +1,73 @@
+{% extends "base.jinja2" %}
+{% block content %}
+    <h1>{{ idea.title }}</h1>
+    <p>Tags: 
+    <ul class="tag-list">
+            {% for tag in idea.tags %}
+            <li>
+                <a href="{{ request.route_url('tag', tag_name=tag.name) }}">
+                    {{ tag.name }}
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </p>
+    <p>By 
+        <a class="byline" href="{{ request.route_url('user', username=idea.author.username) }}">
+            {{ idea.author.name }}
+        </a>.
+    </p>
+    <p>Hits: <b class="hits">{{ idea.hits }}</b>.</p>
+    <p>Misses: <b class="misses">{{ idea.misses }}</b>.</p>
+    <p class="idea-text">{{ idea.text }}</p>
+    {% if voted %}
+        <p>You already voted for this idea.</p>
+    </div>
+    {% else %}
+    {% if viewer_username %}
+    <div>
+        <form action="{{ request.route_url('idea_vote') }}" method="post">
+            <input name="_csrf" type="hidden"
+                value="{{ request.session.get_csrf_token() }}">
+            <input type="hidden" name="target" value="{{ idea.idea_id }}" />
+            <input type="submit" class="submit" name="form.vote_hit" value="Hit" />
+            <input type="submit" class="submit" name="form.vote_miss" value="Miss" />
+        </form>
+    </div>
+    {% endif %}
+    {% endif %}
+    <p>
+        {% if username %}
+           <a href="{{ request.route_url('idea_add', _query={'target': idea.idea_id}) }}">Add your comment.</a>
+        {% else %}
+        <span >Log in to add a comment</span>
+        {% endif %}
+    </p>
+    {% if idea.comments %}
+    <div >
+        <h3 class="subtitle">Comments</h3>
+        <ul>
+            {% for comment in idea.comments %}
+            <li>
+                <span class="tags">
+                {% for tag in comment.tags %}
+                    <a href="{{ request.route_url('tag', tag_name=tag.name) }}">
+                        {{ tag.name }}
+                    </a>
+                {% endfor %}
+                </span>
+                <a href="{{ request.route_url('idea', idea_id=comment.idea_id) }}" class="idea">
+                    {{ comment.title }}
+                </a>, by 
+                <a class="byline" href="{{ request.route_url('user', username=comment.author.username) }}">
+                    {{ comment.author.name }}
+                </a>
+                <span class="hits">{{ comment.hits }}</span> hits,
+                <span class="misses">{{ comment.misses }}</span> misses.
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+{% endblock content %}
+
