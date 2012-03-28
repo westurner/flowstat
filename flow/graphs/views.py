@@ -1,6 +1,6 @@
 import formencode
 from pyramid.view import view_config
-from pyramid.httpexceptions import HTTPFound
+#from pyramid.httpexceptions import HTTPFound
 #from pyramid.httpexceptions import HTTPNotFound
 from pyramid_simpleform import Form
 from pyramid_simpleform.renderers import FormRenderer
@@ -19,7 +19,7 @@ from ..numbers.views import NumberGraphRESTfulView
 
 class GraphsRESTfulView(NumberGraphRESTfulView):
     def render_json(self, value):
-        renderer=self._renderers['json']
+        renderer = self._renderers['json']
         return dict(
             body=self.context.to_json(value, self.fields, self.wrap),
             charset=renderer[1],
@@ -27,7 +27,7 @@ class GraphsRESTfulView(NumberGraphRESTfulView):
         )
 
     def render_html(self, value):
-        renderer=self._renderers['html']
+        renderer = self._renderers['html']
         return dict(
             body=render('graphs/templates/reference_graph.jinja2', value,
                         self.request),
@@ -36,7 +36,7 @@ class GraphsRESTfulView(NumberGraphRESTfulView):
         )
 
     def render_graphml(self, value):
-        renderer=self._renderers['graphml']
+        renderer = self._renderers['graphml']
         return dict(
             body=render('graphs/templates/graph.graphml.jinja2',
                         {'g': value}),
@@ -57,8 +57,9 @@ class GraphsRESTfulView(NumberGraphRESTfulView):
 from pyramid.util import DottedNameResolver
 dotted_name_resolver = DottedNameResolver()
 
-def get_reference_graph(cls, argdict={}):
+def get_reference_graph(cls, argdict=None):
     # TODO reference graph collection
+    argdict = argdict or {}
     if isinstance(cls, basestring):
         try:
             reference_graph = "networkx.generators.%s" % cls
@@ -150,7 +151,7 @@ class ReferenceGraphSchema(formencode.Schema):
     # TODO
     one = formencode.validators.Number(not_empty=True)
     two = formencode.validators.Number(not_empty=True)
-    format = formencode.validators.OneOf(['json','xml','png','graphml'])
+    format = formencode.validators.OneOf(['json', 'xml', 'png', 'graphml'])
     #chained_validators = [
     #    formencode.validators.FieldsMatch('pwrd','confirm_pwrd')
     #]
@@ -180,28 +181,28 @@ def references_view(request):
             # FIXME: content-type: []/json; charset: UTF-8
             return {'data': nxjson.dumps(g) }
 
-        elif fmt == 'png': # *
-            # FIXME: ratelimit
-            g_png = g.render('png')
-            res = fs.store(g_png,
-                        type='image/png',
-                        id=gmeta['id'],
-                        uri='graphs/referenceial/%s,%s.png' % (one, two))
-            g_png_uri = res.uri
-            #g_png_uri = route_url('referenceial_graph', request)
-            return HTTPFound(location=g_png_uri)
+        #elif fmt == 'png': # *
+            ## FIXME: ratelimit
+            #g_png = g.render('png')
+            #res = fs.store(g_png,
+                        #type='image/png',
+                        #id=gmeta['id'],
+                        #uri='graphs/referenceial/%s,%s.png' % (one, two))
+            #g_png_uri = res.uri
+            ##g_png_uri = route_url('referenceial_graph', request)
+            #return HTTPFound(location=g_png_uri)
 
-        elif fmt == 'xml':
-            raise NotImplementedError()
+        #elif fmt == 'xml':
+            #raise NotImplementedError()
 
-        elif fmt == 'graphml':
-            g_graphml = render('templates/graph.graphml.jinja2', {'g': g})
-            res = fs.store(g_graphml,
-                type='something/graphml',
-                id=gmeta['id'],
-                uri='graphs/referenceial/%s,%s.graphml' % (one, two) )
-            g_graphml_uri = res.uri
-            return HTTPFound(location=g_graphml_uri)
+        #elif fmt == 'graphml':
+            #g_graphml = render('templates/graph.graphml.jinja2', {'g': g})
+            #res = fs.store(g_graphml,
+                #type='something/graphml',
+                #id=gmeta['id'],
+                #uri='graphs/referenceial/%s,%s.graphml' % (one, two) )
+            #g_graphml_uri = res.uri
+            #return HTTPFound(location=g_graphml_uri)
 
     return {
         'title': 'graphs',
@@ -215,7 +216,8 @@ def references_view(request):
 
 
 import StringIO as io
-from reference import generate_networkx_graph_reference
+from .reference import generate_networkx_graph_reference
+
 @view_config(route_name='reference_graph_docs',
             permission='view',
             accept='text/html',
@@ -224,11 +226,11 @@ def pyramid_view(request):
     request.response.charset = 'utf-8'
     request.response.content_type = 'text/html ; charset: utf-8'
 
-    output_buffer=io.StringIO()
+    output_buffer = io.StringIO()
     generate_networkx_graph_reference(output=output_buffer)
     return render_rst2html(
         io.StringIO(
-            output_buffer.getvalue().encode('ascii','replace')) )
+            output_buffer.getvalue().encode('ascii', 'replace')) )
 
 
 def render_rst2html(source=None, source_path=None):

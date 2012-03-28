@@ -15,7 +15,7 @@ from pyramid.security import authenticated_userid
 from ..security.views import login_form_view
 from ..models import DBSession
 from ..models import User
-from ..views.blocks import toolbar_view
+from ..site.views.blocks import toolbar_view
 
 from .models import Idea, Tag
 
@@ -25,9 +25,10 @@ from .models import Idea, Tag
 
 def latest_view(request):
     latest = Idea.ideas_bunch(Idea.idea_id.desc())
-    return render('shootout/templates/_latest.jinja2',
-                    {'latest': latest},
-                    request)
+    return latest
+    #return render('shootout/templates/_latest.jinja2',
+    #                {'latest': latest},
+    #                request)
 
 def cloud_view(request):
     totalcounts = []
@@ -36,9 +37,10 @@ def cloud_view(request):
         totalcounts.append((tag[0], tag[1], weight))
     cloud = sorted(totalcounts, key=itemgetter(0))
 
-    return render('shootout/templates/_cloud.jinja2',
-                    {'cloud': cloud},
-                    request)
+    return cloud
+    #return render('shootout/templates/_cloud.jinja2',
+    #                {'cloud': cloud},
+    #                request)
 
 
 @view_config(permission='view', route_name='ideas_main',

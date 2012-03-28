@@ -8,7 +8,6 @@ build/
 dist/
 ideadb
 findandreplace.sh
-
 flow/static/datatable/examples
 flow/static/datatable/unit_testing
 
@@ -27,3 +26,5 @@ syntax:glob
 *.pt.py
 *.txt.py
 *.swp
+*.log
+*.pid

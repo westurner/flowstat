@@ -52,22 +52,22 @@ def to_file(source=None, filename=None):
     raise TypeError(source)
 
 
-# hrm
-import ast
-import StringIO as io
-from unparse import Unparser
-def parse_for_examples_ast(source=None, filename=None, examples=[]):
+## hrm
+#import ast
+#import StringIO as io
+##from unparse import Unparser
+#def parse_for_examples_ast(source=None, filename=None, examples=[]):
 
-    f = to_file(source=source, filename=filename)
-    ast_tree = ast.parse(f.read())
-    walkpath = []
-    print("ast")
-    for node in ast.walk(ast_tree):
-        walkpath.append(node)
-        ast.dump(node)
+    #f = to_file(source=source, filename=filename)
+    #ast_tree = ast.parse(f.read())
+    #walkpath = []
+    #print("ast")
+    #for node in ast.walk(ast_tree):
+        #walkpath.append(node)
+        #ast.dump(node)
 
-    print("unparsed: ")
-    Unparser(walkpath[0])
+    #print("unparsed: ")
+    #Unparser(walkpath[0])
 
 
 # yuck
