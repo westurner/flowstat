@@ -142,7 +142,9 @@ from flow.models.context import PlainContext
 
 from .views import get_graph
 def GraphsContextFactory(request):
-    return PlainContext(request, fn=lambda id: get_graph(str(id)))
+    return PlainContext(request,
+            get_member=lambda id: get_graph(str(id)),
+            get_collection=lambda *args, **kwargs: dict())
 
 
 Argument = namedtuple('Argument', ('name', 'default', 'values', 'functions'))

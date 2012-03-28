@@ -1,8 +1,8 @@
 from pyramid.view import view_config
 
-from ..shootout.views import cloud_view
-from ..shootout.views import latest_view
-from ..security.views import login_form_view
+from ...shootout.views import cloud_view
+from ...shootout.views import latest_view
+from ...security.views import login_form_view
 
 from .blocks import toolbar_view
 

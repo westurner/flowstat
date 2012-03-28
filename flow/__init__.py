@@ -46,20 +46,14 @@ def configure_app(settings, authn_policy, authz_policy, session_factory):
     config.add_translation_dirs('locale/')
 
     _register_common_templates(config)
-
-    #config.add_subscriber('flow.subscribers.add_base_template',
-    #'pyramid.events.BeforeRender')
     config.add_subscriber('flow.subscribers.csrf_validation',
                           'pyramid.events.NewRequest')
-
     _register_routes(config)
-
     return config
 
 
 def _register_routes(config):
     config.add_static_view('static', 'flow:static')
-
 
 
     config.add_route('sparql_query', '/sparql')
@@ -98,7 +92,7 @@ def _register_routes(config):
 
 
 
-from flow.views import skipautoescape, jsonify
+from .site.templatefilters import skipautoescape, jsonify
 
 def _register_common_templates(config):
     config.add_renderer('jsonp', JSONP(param_name='callback'))
@@ -108,7 +102,7 @@ def _register_common_templates(config):
     env.filters['skipautoescape'] = skipautoescape
     env.filters['jsonify'] = jsonify
 
-    config.add_view('flow.views.errors.http404',
+    config.add_view('flow.site.views.errors.http404',
             renderer='flow:templates/http404.jinja2',
             context='pyramid.exceptions.NotFound')
 

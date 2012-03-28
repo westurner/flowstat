@@ -499,6 +499,7 @@ form br {
 #login_form input{
         margin-bottom: 5px;
         width: 120px;
+        font-size: 1.4em;
 }
 
 .login {
