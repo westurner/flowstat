@@ -1,0 +1,8 @@
+-e file://~/src/networkx
+
+-r ~/etc/requirements-semanticweb.txt
+
+-r ~/etc/requirements-pyramid.txt
+-e file://~/src/pyramid_restler
+-r ~/etc/requirements-pyramidsqlalchemy.txt
+-r ~/etc/requirements-mysql.txt
