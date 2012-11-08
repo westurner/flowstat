@@ -341,7 +341,10 @@ def factordict_to_str(n, factors):
                         for f,count in factors)))
 
 import flow.models.json.nxjson as nxjson
-from ordereddict import OrderedDict
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
 def get_number(n, maxdepth=None):
     factorized = list(get_factor_dict(n, maxdepth))
     factorization = factordict_to_str(n, factorized)
