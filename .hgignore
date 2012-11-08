@@ -10,6 +10,8 @@ ideadb
 findandreplace.sh
 flow/static/datatable/examples
 flow/static/datatable/unit_testing
+bin/
+develop-eggs/
 
 syntax:glob
 .git
