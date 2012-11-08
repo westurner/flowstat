@@ -91,6 +91,95 @@ HZ_SI = (
     (1e24,  u"YHz", "yottahertz", 1),
 )
 
+BANDS = (
+    # Brain
+    ( "delta",  ( 0.1, 4), ),
+    ( "theta",  ( 4,   8), ),
+    ( "alpha",  ( 8,   12), ),
+    ( "mu",     ( 8,   13), ),
+    ( "beta",   (12,   30), ), # low,beta,high 12-15,15-18,19-30
+    ( "gamma",  (30,   100), ), # 100+:
+
+    # Compassion (Gamma)
+    ( "compassion", (25, 40), ),
+
+    # Bass Guitar (Gamma)
+    ( "bassguit B0", (30.87, 30.87), ),
+
+    ( "bassguit E1", (41.20, 41.20), ),
+    ( "bassguit A1", (55,    55), ),
+    ( "bassguit D2", (73.42, 73.42), ),
+    ( "bassguit G2", (98,    98), ),
+
+    # Guitar Standard Pitches (Gamma,
+    ( "guit E2", (82.41,  82.41), ),
+    ( "guit A2", (110,    110), ),
+    ( "guit D3", (146.83, 146.83), ),
+    ( "guit G3", (196.00, 196.00), ),
+    ( "guit B3", (246.94, 246.94), ),
+    ( "guit E4", (329.63, 329.63), ),
+
+    #   0	1	2	3	4	5	6	7	8	9	10	11	12
+    #   E2  F	F♯	G	A♭	A	B♭	B	C	C♯	D	E♭	E
+    #   B	C	C♯	D	E♭	E	F	F♯	G	A♭	A	B♭	B
+    #   G	A♭	A	B♭	B	C	C♯	D	E♭	E	F	F♯	G
+    #   D	E♭	E	F	F♯	G	A♭	A	B♭	B	C	C♯	D
+    #   A	B♭	B	C	C♯	D	E♭	E	F	F♯	G	A♭	A
+    #   E4	F	F♯	G	A♭	A	B♭	B	C	C♯	D	E♭	E
+
+    # Human Voice
+    ( "human voice", (80, 1100), ),
+
+    #( "soprano", (c-5), ),
+    #( "mezzo-soprano", (a3, a5), ),
+    #( "contralto", (f3, f5), ),
+    #( "tenor", (c3, c5), ),
+    #( "baritone", (f2,f4), ),
+    #( "bass", (e2, e4), ),
+
+
+    ( "human hearing", ( 20, 2.0*1e4, ), ),
+    ( "ultrasound",   (20*1e4, 20*1e4, ), ), # 20000, inf.
+    ( "dog hearing" , ( 40, 6.0*1e4, ), ),
+
+    ( "bat hearing",  ( 20, 1.2*1e5, ), ),
+
+    ( "mice hearing", ( 1*1e4, 90*1e4, ), ),
+
+    ( "dolphin type I: A", ( 2*1e4, 2*1e4, ), ),
+    (" dolphin type I: B", ( 110*1e4, 110*1e4, ), ),
+
+    ( "whale/bottlenose type II", ( 0.25*1e4, 150*1e4 ), ),
+
+    ( "free-water protons", (63*1e6, 63*1e6), ),  # @ 1.5 teslas
+
+    # proton EFNR       equator, poles
+    ( "EFNR VLF->ULF", (1.3*1e2, 2.5*1e2), ),
+
+    ( "audio CD", (4.41*1e4, 4.41*1e4), ),
+
+
+    ( "micro", (300*1e6, 300*1e9), ),
+
+    ( "long wave", (148.5*1e4, 283.5*1e4), ),
+    ( "medium wave", (520*1e6, 1610*1e6), ),
+    ( "amateur radio", (1.8*1e6, 2.0*1e6), ),
+    ( "short wave",  (2.3*1e6, 26.1*1e6), ),
+
+    ( "FM radio", (87.5*1e6, 108.0*1e6), ),
+    ( "TV", (54*1e6, 890*1e6), ),
+
+    # Visible
+    ( "violet", (668*1e12, 789*1e12), ),
+    ( "blue", (631*1e12, 668*1e12), ),
+    ( "cyan", (606*1e12, 630*1e12), ),
+    ( "green", (526*1e12, 606*1e12), ),
+    ( "yellow", (508*1e12, 526*1e12), ),
+    ( "orange", (484*1e12, 508*1e12), ),
+    ( "red", (400*1e12, 484*1e12), ),
+)
+
+
 def scale_hz(hz):
     if hz > 0 and hz < 1000:
         return scale_units(hz, HZ_SI, 10)  # default to Hz
@@ -106,93 +195,7 @@ def scale_m(m):
 import unittest
 class TestHertz(unittest.TestCase):
     def test_hertz(self):
-        bands = (
-            # Brain
-            ( "delta",  ( 0.1, 4), ),
-            ( "theta",  ( 4,   8), ),
-            ( "alpha",  ( 8,   12), ),
-            ( "mu",     ( 8,   13), ),
-            ( "beta",   (12,   30), ), # low,beta,high 12-15,15-18,19-30
-            ( "gamma",  (30,   100), ), # 100+:
-
-            # Compassion (Gamma)
-            ( "compassion", (25, 40), ),
-
-            # Bass Guitar (Gamma)
-            ( "bassguit B0", (30.87, 30.87), ),
-
-            ( "bassguit E1", (41.20, 41.20), ),
-            ( "bassguit A1", (55,    55), ),
-            ( "bassguit D2", (73.42, 73.42), ),
-            ( "bassguit G2", (98,    98), ),
-
-            # Guitar Standard Pitches (Gamma, 
-            ( "guit E2", (82.41,  82.41), ),
-            ( "guit A2", (110,    110), ),
-            ( "guit D3", (146.83, 146.83), ),
-            ( "guit G3", (196.00, 196.00), ),
-            ( "guit B3", (246.94, 246.94), ),
-            ( "guit E4", (329.63, 329.63), ),
-
-            #   0	1	2	3	4	5	6	7	8	9	10	11	12
-            #   E2  F	F♯	G	A♭	A	B♭	B	C	C♯	D	E♭	E
-            #   B	C	C♯	D	E♭	E	F	F♯	G	A♭	A	B♭	B
-            #   G	A♭	A	B♭	B	C	C♯	D	E♭	E	F	F♯	G
-            #   D	E♭	E	F	F♯	G	A♭	A	B♭	B	C	C♯	D
-            #   A	B♭	B	C	C♯	D	E♭	E	F	F♯	G	A♭	A
-            #   E4	F	F♯	G	A♭	A	B♭	B	C	C♯	D	E♭	E
-
-            # Human Voice
-            ( "human voice", (80, 1100), ),
-
-            #( "soprano", (c-5), ),
-            #( "mezzo-soprano", (a3, a5), ),
-            #( "contralto", (f3, f5), ),
-            #( "tenor", (c3, c5), ),
-            #( "baritone", (f2,f4), ),
-            #( "bass", (e2, e4), ),
-
-
-            ( "human hearing", ( 20, 2.0*1e4, ), ),
-            ( "ultrasound",   (20*1e4, 20*1e4, ), ), # 20000, inf.
-            ( "dog hearing" , ( 40, 6.0*1e4, ), ),
-
-            ( "bat hearing",  ( 20, 1.2*1e5, ), ),
-
-            ( "mice hearing", ( 1*1e4, 90*1e4, ), ),
-
-            ( "dolphin type I: A", ( 2*1e4, 2*1e4, ), ),
-            (" dolphin type I: B", ( 110*1e4, 110*1e4, ), ),
-
-            ( "whale/bottlenose type II", ( 0.25*1e4, 150*1e4 ), ),
-
-            ( "free-water protons", (63*1e6, 63*1e6), ),  # @ 1.5 teslas
-
-            # proton EFNR       equator, poles
-            ( "EFNR VLF->ULF", (1.3*1e2, 2.5*1e2), ),
-
-            ( "audio CD", (4.41*1e4, 4.41*1e4), ),
-
-
-            ( "micro", (300*1e6, 300*1e9), ),
-
-            ( "long wave", (148.5*1e4, 283.5*1e4), ),
-            ( "medium wave", (520*1e6, 1610*1e6), ),
-            ( "amateur radio", (1.8*1e6, 2.0*1e6), ),
-            ( "short wave",  (2.3*1e6, 26.1*1e6), ),
-
-            ( "FM radio", (87.5*1e6, 108.0*1e6), ),
-            ( "TV", (54*1e6, 890*1e6), ),
-
-            # Visible
-            ( "violet", (668*1e12, 789*1e12), ),
-            ( "blue", (631*1e12, 668*1e12), ),
-            ( "cyan", (606*1e12, 630*1e12), ),
-            ( "green", (526*1e12, 606*1e12), ),
-            ( "yellow", (508*1e12, 526*1e12), ),
-            ( "orange", (484*1e12, 508*1e12), ),
-            ( "red", (400*1e12, 484*1e12), ),
-        )
+        bands = BANDS
         smin = min(b[1][0] for b in bands)
         smax = max(b[1][1] for b in bands)
         print "BANDS"
@@ -265,7 +268,7 @@ if __name__ == "__main__":
 
     if opts.run_tests:
         import sys
-        sys.argv = sys.argv[0]+args
+        sys.argv = [sys.argv[0]]+args
         import unittest
         exit(unittest.main())
 
