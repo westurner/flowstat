@@ -1,0 +1,3 @@
+~/src/nose
+#~/src/nose-xcover
+
