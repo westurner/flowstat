@@ -5,14 +5,27 @@ from __future__ import print_function
 regexapp - a simple regex webapp
 """
 
-
-from pyramid.view import view_config
-
 # model
+class Regexable(object):
+    @classmethod
+    def perform_regex(self, rgxform):
+        if not rgxform.validate():
+            return { 'errors': rgxform.errors.as_dict() }
 
-def regex_view(request):
-    rgxform = RegexForm(request)
-    return rgxform.do_regex()
+        rgxform.after_validation() # port to n-framework event namespace
+        rgx = rgxform.rgx
+
+        pattern_match_bool = rgx.match(rgxform.text)
+
+        if rgxform.replace:
+            new_string, count = rgx.subn(rgxform.replace, rgxform.text)
+            return {'matchbool': pattern_match_bool,
+                    'new_string': new_string,
+                    'count': count }
+        else:
+            match_iter = rgx.finditer(rgxform.text)
+            return {'matchbool': pattern_match_bool,
+                    'pattern_matches': enumerate(match_iter)}
 
 # form
 import re
@@ -21,58 +34,33 @@ class RegexForm(FormClass):
 
     action = fields.AutoCompleteSelectField()
 
-    pattern = fields.UnicodeField()
+    pattern = fields.StringField()
     replace = fields.UnicodeField(optional=True)
     text    = fields.UnicodeField()
 
     def after_validation(self):
         self.rgx = re.compile(self.pattern)
 
-    def do_regex(self, rgxform):
-        if not rgxform.validate():
-            ret = { 'errors': rgxform.errors.as_dict() }
-        else:
-            rgxform.after_validation() # port to n-framework event namespace
-
-            pattern_match_bool = self.rgx.match(rgxform.text)
-
-            if rgxform.replace:
-                new_string, count = (
-                    self.rgx.subn(rgxform.replace, rgxform.text) )
-                return {'matchbool': pattern_match_bool,
-                        'new_string': new_string,
-                        'count': count }
-            else:
-                match_iter = rgx.finditer(rgxform.text)
-                return {'matchbool': pattern_match_bool,
-                        'pattern_matches': enumerate(match_iter)}
 
 # view
 def regex_view(request):
     return Regexable.perform_regex(RegexForm(request))
 
 # application
-from pyramid.config import Configurator
-def regexapp(address='127.0.0.1',port='8080'):
+def regexapp():
     """
-    regex application
+    mainfunc
     """
-
-    config = Configurator()
-    config.add_route('regex', '/regex')
-    config.add_view(regex_view, route_name='regex')
-    app = config.make_wsgi_app()
-    server = make_server(address, port, app)
-    server.serve_forever()
+    settings = {}
+    app = framework.Application(settings=settings)
+    app.add_route('/', regex_view)
+    return app.serve(address='127.0.0.1', port='8080')
 
 
 import unittest
 class Test_regexapp(unittest.TestCase):
     def test_regexapp(self):
-        try:
-            regexapp(serve_forever=False)
-        except KeyboardInterrupt:
-            pass
+        pass
 
 
 def main():
