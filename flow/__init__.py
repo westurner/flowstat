@@ -11,7 +11,7 @@ from .models.rdf import initialize_rdflib
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.
     """
-    engine = engine_from_config(settings, 'db_main.')
+    engine = engine_from_config(settings, 'sqlalchemy.')
     initialize_sql(engine)
 
     #data_engine = engine_from_config(settings, 'db_data.')
