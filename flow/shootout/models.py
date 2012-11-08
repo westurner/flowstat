@@ -17,54 +17,15 @@ from ..models import Base
 from ..models import DBSession
 from ..models import User
 
+from ..tags.models import Tag
+
 ideas_tags = Table('ideas_tags', Base.metadata,
     Column('idea_id', Integer, ForeignKey('ideas.idea_id')),
     Column('tag_id', Integer, ForeignKey('tags.tag_id'))
 )
 
 
-class Tag(Base):
-    """
-    Idea's tag model.
-    """
-    __tablename__ = 'tags'
-    tag_id = Column(Integer, primary_key=True)
-    name = Column(Unicode(50), unique=True, index=True)
 
-    def __init__(self, name):
-        self.name = name
-
-    @staticmethod
-    def extract_tags(tags_string):
-        tags = tags_string.replace(';', ' ').replace(',', ' ')
-        tags = [tag.lower() for tag in tags.split()]
-        tags = set(tags)
-
-        return tags
-
-    @classmethod
-    def get_by_name(cls, tag_name):
-        tag = DBSession.query(cls).filter(cls.name==tag_name)
-        return tag.first()
-
-    @classmethod
-    def create_tags(cls, tags_string):
-        tags_list = cls.extract_tags(tags_string)
-        tags = []
-
-        for tag_name in tags_list:
-            tag = cls.get_by_name(tag_name)
-            if not tag:
-                tag = Tag(name=tag_name)
-                DBSession.add(tag)
-            tags.append(tag)
-
-        return tags
-
-    @classmethod
-    def tag_counts(cls):
-        query = DBSession.query(Tag.name, func.count('*'))
-        return query.join('ideas').group_by(Tag.name)
 
 voted_users = Table('ideas_votes', Base.metadata,
     Column('idea_id', Integer, ForeignKey('ideas.idea_id')),
