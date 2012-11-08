@@ -14,7 +14,7 @@ from pyramid.response import Response
 from pyramid_restler.view import RESTfulView
 
 try:
-    from collections import ordereddict as OrderedDict
+    from collections import OrderedDict
 except:
     from ordereddict import OrderedDict
 
