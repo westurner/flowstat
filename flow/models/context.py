@@ -5,6 +5,9 @@ from pyramid_restler.interfaces import IContext
 from zope.interface import implementer
 #from sqlalchemy.schema import Column
 
+def null(*args, **kwargs):
+    return {}
+
 #@component.adapter(IRequest)
 @implementer(IContext)
 class PlainContext(object):
@@ -26,8 +29,8 @@ class PlainContext(object):
         """
 
         self.request = request
-        self._get_member = get_member or lambda *k, **kw: {}
-        self._get_collection = get_collection or lambda *k, **kw: {}
+        self._get_member = get_member or null
+        self._get_collection = get_collection or null
         self.index_key = index_key
         self.default_fields = default_fields
 
@@ -38,7 +41,7 @@ class PlainContext(object):
     #def session_factory(self):
     #    return self.request.db_session
 
-    def get_collection(self, **kwargs):
+    def get_collection(self, *args, **kwargs):
         """
         SELECT *
         SELECT * WHERE {parse(kwargs)}
