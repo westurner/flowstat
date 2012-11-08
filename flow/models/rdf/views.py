@@ -29,11 +29,12 @@ def sparql_query(request):
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         if 'query' in request.GET:
             try:
-                results_json = json.dumps(store.execute_sparql(request.GET['query']))
+                results_json = json.dumps(
+                        store.execute_sparql(request.GET['query']))
             except Exception, e:
                 results_json = {'error': str(e) }
 
-            request.response_content_type = 'application/sparql-results+json'
+            request.response.content_type = 'application/sparql-results+json'
             return render('string', results_json, request)
     else:
 
@@ -57,7 +58,7 @@ def sparql_query(request):
                 raise
             #results_json = json.dumps([x for x in results])
 
-        request.response_content_type = 'text/html'
+        request.response.content_type = 'text/html'
         return render('models/rdf/templates/sparql_query.jinja2', {
             'title': 'sparql',
             'form': FormRenderer(form),
