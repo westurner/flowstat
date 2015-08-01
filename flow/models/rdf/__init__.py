@@ -59,7 +59,7 @@ def store_from_engine(engine, **kwargs):
 def get_session_uri(base):
     # Mint a URI for this run
     session_id = str(uuid.uuid4())
-    graph_uri = os.path.join(base, session_id)
+    graph_uri = u'/'.join(base, session_id)
     logging.debug("Minting session uri: %r" % graph_uri)
     return graph_uri
 
